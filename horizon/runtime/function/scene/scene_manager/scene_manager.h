@@ -17,7 +17,7 @@
 #include <filesystem>
 #include <tuple>
 
-#include <runtime/core/math/math.h>
+#include <runtime/core/math/hmath.h>
 #include <runtime/core/utils/definations.h>
 
 #include <runtime/function/resource/resource_manager/resource_manager.h>

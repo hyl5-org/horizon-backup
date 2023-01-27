@@ -2,7 +2,7 @@
 
 #include <variant>
 
-#include <runtime/core/math/math.h>
+#include <runtime/core/math/hmath.h>
 #include <runtime/function/rhi/buffer.h>
 #include <runtime/function/rhi/texture.h>
 #include <runtime/function/rhi/pipeline.h>

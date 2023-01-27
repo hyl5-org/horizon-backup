@@ -1,7 +1,7 @@
 #pragma once
 
 #include <runtime/core/utils/definations.h>
-#include <runtime/core/math/math.h>
+#include <runtime/core/math/hmath.h>
 
 namespace Horizon {
 

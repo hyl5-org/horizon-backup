@@ -7,7 +7,7 @@
 //#include <d3d12.h>
 
 #include <runtime/core/log/log.h>
-#include <runtime/core/math/math.h>
+#include <runtime/core/math/hmath.h>
 #include <runtime/core/container/Container.h>
 #include <runtime/core/utils/definations.h>
 #include <runtime/function/rhi/vulkan/vulkan_config.h>

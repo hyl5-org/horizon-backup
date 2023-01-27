@@ -14,7 +14,7 @@
 
 // project headers
 #include <runtime/core/container/container.h>
-#include <runtime/core/math/math.h>
+#include <runtime/core/math/hmath.h>
 
 namespace Horizon {
 

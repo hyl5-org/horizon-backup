@@ -16,7 +16,7 @@
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 
-#include <runtime/core/math/math.h>
+#include <runtime/core/math/hmath.h>
 #include <runtime/core/utils/definations.h>
 #include <runtime/core/memory/allocators.h>
 
