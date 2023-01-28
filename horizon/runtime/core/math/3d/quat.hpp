@@ -15,7 +15,7 @@
 // third party libraries
 
 // project headers
-#include <runtime/core/utils/definations.h>
+#include "runtime/core/utils/definations.h"
 
 #define QUATERNION_ACCESS(CHARACTER, INDEX)                                                                         \
     constexpr T &CHARACTER() { return e.at(INDEX); }

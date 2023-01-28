@@ -15,9 +15,9 @@
 #include <directx-dxc/dxcapi.h>
 
 // project headers
-#include <runtime/core/singleton/public_singleton.h>
-#include <runtime/function/rhi/rhi_utils.h>
-#include <runtime/function/rhi/shader.h>
+#include "runtime/core/singleton/public_singleton.h"
+#include "runtime/function/rhi/rhi_utils.h"
+#include "runtime/function/rhi/shader.h"
 
 namespace Horizon {
 

@@ -13,7 +13,7 @@
 // third party libraries
 
 // project headers
-#include <runtime/core/log/log.h>
+#include "runtime/core/log/log.h"
 
 #ifdef RENDERDOC_ENABLED
 

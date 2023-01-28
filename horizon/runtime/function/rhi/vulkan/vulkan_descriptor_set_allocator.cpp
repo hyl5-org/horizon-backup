@@ -2,9 +2,9 @@
 
 #include <algorithm>
 
-#include <runtime/function/rhi/rhi_utils.h>
-#include <runtime/function/rhi/resource_cache.h>
-#include <runtime/function/rhi/vulkan/vulkan_pipeline.h>
+#include "runtime/function/rhi/rhi_utils.h"
+#include "runtime/function/rhi/resource_cache.h"
+#include "runtime/function/rhi/vulkan/vulkan_pipeline.h"
 
 namespace Horizon::Backend {
 

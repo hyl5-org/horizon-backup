@@ -16,7 +16,7 @@
 
 #include "Component.h"
 
-#include <runtime/core/math/hmath.h>
+#include "runtime/core/math/hmath.h"
 
 namespace Horizon {
 

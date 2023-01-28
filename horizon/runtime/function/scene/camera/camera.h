@@ -14,8 +14,8 @@
 
 // project headers
 
-#include <runtime/core/math/hmath.h>
-#include <runtime/core/window/window_input.h>
+#include "runtime/core/math/hmath.h"
+#include "runtime/core/window/window_input.h"
 
 namespace Horizon {
 

@@ -7,14 +7,14 @@
  *********************************************************************/
 
 
-#include "Units.h"
+#include "units.h"
 
 // standard libraries
 
 // third party libraries
 
 // project headers
-#include <runtime/core/math/hmath.h>
+#include "runtime/core/math/hmath.h"
 
 namespace Horizon {
 

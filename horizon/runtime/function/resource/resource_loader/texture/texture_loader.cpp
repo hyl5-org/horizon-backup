@@ -11,14 +11,12 @@
 // standard libraries
 
 // third party libraries
-
-// project headers
-
-#include "ddspp.h"
+#include "runtime/function/resource/resource_loader/texture/ddspp.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#include <runtime/core/log/log.h>
+// project headers
+#include "runtime/core/log/log.h"
 
 namespace Horizon {
 

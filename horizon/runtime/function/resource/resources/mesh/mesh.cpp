@@ -4,14 +4,14 @@
 
 #include <meshoptimizer.h>
 
-#include <runtime/function/resource/resource_loader/texture/texture_loader.h>
+#include "runtime/function/resource/resource_loader/texture/texture_loader.h"
 
 #include <assimp/pbrmaterial.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-#include <runtime/core/log/log.h>
-#include <runtime/function/rhi/rhi.h>
+#include "runtime/core/log/log.h"
+#include "runtime/function/rhi/rhi.h"
 
 namespace Horizon {
 

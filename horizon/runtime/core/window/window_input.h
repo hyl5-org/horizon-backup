@@ -13,8 +13,8 @@
 // third party libraries
 
 // project headers
-#include <runtime/core/math/hmath.h>
-#include <runtime/core/window/window.h>
+#include "runtime/core/math/hmath.h"
+#include "runtime/core/window/window.h"
 
 namespace Horizon::Input {
 

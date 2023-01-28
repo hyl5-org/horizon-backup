@@ -4,7 +4,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <runtime/core/utils/functions.h>
+#include "runtime/core/utils/functions.h"
 
 namespace Horizon::Backend {
 

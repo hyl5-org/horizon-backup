@@ -13,7 +13,7 @@
 // third party libraries
 
 // project headers
-#include <runtime/core/memory/memory.h>
+#include "runtime/core/memory/memory.h"
 
 // TODO: replace assimp with fbxsdk and cgltf
 

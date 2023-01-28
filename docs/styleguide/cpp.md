@@ -11,3 +11,5 @@ test on debug and release
 resources managed by resource manager are created with Memory::Alloc
 
 resources not managed by resoure manager are created with Memory::MakeUnique
+
+include third party libs with <>, include header files with "", (/W0 are enabled for include file using <>)

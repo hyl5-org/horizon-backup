@@ -14,14 +14,14 @@
 
 // project headers
 
-#include <runtime/core/memory/Memory.h>
-#include <runtime/core/window/Window.h>
+#include "runtime/core/memory/Memory.h"
+#include "runtime/core/window/Window.h"
 
-#include <runtime/function/rhi/rhi_utils.h>
+#include "runtime/function/rhi/rhi_utils.h"
 
-#include <runtime/system/render/RenderSystem.h>
+#include "runtime/system/render/RenderSystem.h"
 
-#include <runtime/interface/horizon_config.h>
+#include "runtime/interface/horizon_config.h"
 
 namespace Horizon {
 

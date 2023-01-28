@@ -16,7 +16,7 @@
 // third party libraries
 
 // project headers
-#include <runtime/core/utils/definations.h>
+#include "runtime/core/utils/definations.h"
 
 #define VECTOR_ACCESS(CHARACTER, INDEX, LENGTH)                                                                       \
     constexpr T &CHARACTER() {                                                                                         \

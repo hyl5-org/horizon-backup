@@ -14,5 +14,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC third_party)
 set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER "Horizon/Runtime")
 
 if(MSVC)
-  target_compile_options(${PROJECT_NAME} PRIVATE /W3 /WX)
+  target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /external:anglebrackets /external:W0)
 endif()

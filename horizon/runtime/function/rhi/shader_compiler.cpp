@@ -1,9 +1,9 @@
 #include "shader_compiler.h"
 
-#include <runtime/core/log/log.h>
-#include <runtime/core/memory/allocators.h>
-#include <runtime/core/platform/platform.h>
-#include <runtime/core/utils/functions.h>
+#include "runtime/core/log/log.h"
+#include "runtime/core/memory/allocators.h"
+#include "runtime/core/platform/platform.h"
+#include "runtime/core/utils/functions.h"
 
 namespace Horizon {
 

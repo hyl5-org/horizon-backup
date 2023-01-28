@@ -1,4 +1,4 @@
-#include "Light.h"
+#include "light.h"
 
 // standard libraries
 
@@ -21,8 +21,8 @@ void Light::SetIntensity(f32 intensity) noexcept {
         params.intensity = intensity;
         break;
     case LightType::SPOT_LIGHT:
-        // https://google.github.io/filament/Filament.htm
-        params.intensity = intensity / math::_2PI * (1 - math::Cos(params.spot_cone_inner_outer.y() / 2));
+        // [Physically Based Rendering in Filament]
+        params.intensity = intensity / math::_2PI * (1.0f - math::Cos(params.spot_cone_inner_outer.y() / 2.0f));
         break;
     }
 }

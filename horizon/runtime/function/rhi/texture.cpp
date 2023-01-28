@@ -8,7 +8,7 @@
 
 #include "texture.h"
 
-#include <runtime/core/utils/functions.h>
+#include "runtime/core/utils/functions.h"
 
 namespace Horizon::Backend {
 

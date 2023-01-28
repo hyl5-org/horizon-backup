@@ -18,7 +18,7 @@
 #include "renderdoc_app.h"
 
 // project headers
-#include <runtime/core/utils/definations.h>
+#include "runtime/core/utils/definations.h"
 
 namespace Horizon::RDC {
 

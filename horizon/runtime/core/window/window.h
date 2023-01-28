@@ -26,8 +26,8 @@
 #endif
 
 // project headers
-#include <runtime/core/memory/memory.h>
-#include <runtime/core/utils/definations.h>
+#include "runtime/core/memory/memory.h"
+#include "runtime/core/utils/definations.h"
 
 namespace Horizon {
 

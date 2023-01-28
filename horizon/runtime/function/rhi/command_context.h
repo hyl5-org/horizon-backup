@@ -1,7 +1,7 @@
 #pragma once
 
-#include <runtime/function/rhi/command_list.h>
-#include <runtime/function/rhi/rhi_utils.h>
+#include "runtime/function/rhi/command_list.h"
+#include "runtime/function/rhi/rhi_utils.h"
 
 namespace Horizon::Backend {
 

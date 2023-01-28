@@ -1,7 +1,7 @@
 #pragma once
 
-#include <runtime/function/rhi/rhi_utils.h>
-#include <runtime/function/rhi/texture.h>
+#include "runtime/function/rhi/rhi_utils.h"
+#include "runtime/function/rhi/texture.h"
 
 namespace Horizon::Backend {
 
