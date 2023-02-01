@@ -17,6 +17,10 @@
 
 #include "file_system.h"
 
+#include <fstream>
+#include <istream>
+#include <ostream>
+#include <iostream>
 #include <sstream>
 
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -137,7 +141,8 @@ Container::Array<u8> read_binary_file(const Container::String &filename, const u
     return data;
 }
 
-static void write_binary_file(const Container::Array<u8> &data, const Container::String &filename, const uint32_t count) {
+static void write_binary_file(const Container::Array<u8> &data, const Container::String &filename,
+                              const uint32_t count) {
     std::ofstream file;
 
     file.open(filename, std::ios::out | std::ios::binary | std::ios::trunc);
@@ -212,4 +217,4 @@ bool write_json(nlohmann::json &data, const Container::String &filename) {
     out_stream.close();
     return true;
 }
-} // namespace Horizon
+} // namespace Horizon::fs

@@ -14,7 +14,7 @@ class VulkanDescriptorSet : public DescriptorSet {
   public:
     VulkanDescriptorSet(const VulkanRendererContext &context, ResourceUpdateFrequency frequency,
                         const Container::HashMap<Container::String, DescriptorDesc> & write_descs, VkDescriptorSet set) noexcept;
-    virtual ~VulkanDescriptorSet() noexcept {}; 
+    virtual ~VulkanDescriptorSet() noexcept = default; 
 
     VulkanDescriptorSet(const VulkanDescriptorSet &rhs) noexcept = delete;
     VulkanDescriptorSet &operator=(const VulkanDescriptorSet &rhs) noexcept = delete;

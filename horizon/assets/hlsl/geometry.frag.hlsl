@@ -28,12 +28,12 @@ struct MaterialDescription {
     float2 pad3;
 };
 
-RES(Tex2D(float4), material_textures[], UPDATE_FREQ_BINDLESS, t3, binding = 0);
-RES(Buffer(MaterialDescription), material_descriptions[], UPDATE_FREQ_PER_FRAME, t3, binding = 3);
+RES(Texture2D(float4), material_textures[], UPDATE_FREQ_BINDLESS);
+RES(Buffer(MaterialDescription), material_descriptions[], UPDATE_FREQ_PER_FRAME);
 
-RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME, s0, binding = 4);
+RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME);
 
-CBUFFER(TAAOffsets, UPDATE_FREQ_PER_FRAME, b2, binding = 6)
+CBUFFER(TAAOffsets, UPDATE_FREQ_PER_FRAME)
 {
     DATA(float4, taa_prev_curr_offset, None);
 };
@@ -71,7 +71,7 @@ STRUCT(PSOutput) {
 
 PSOutput PS_MAIN(VSOutput vsout, SV_PrimitiveID(uint) tri_id) 
 {
-    INIT_MAIN;
+    
     PSOutput psout;
 
     uint material_id = vsout.material_id;

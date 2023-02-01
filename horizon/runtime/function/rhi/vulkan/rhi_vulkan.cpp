@@ -15,6 +15,7 @@
 #include <vk_mem_alloc.h>
 
 #include "runtime/core/utils/functions.h"
+#include "runtime/core/io/file_system.h"
 #include "runtime/function/rhi/vulkan/vulkan_buffer.h"
 #include "runtime/function/rhi/vulkan/vulkan_command_context.h"
 #include "runtime/function/rhi/vulkan/vulkan_pipeline.h"
@@ -72,10 +73,9 @@ SwapChain *RHIVulkan::CreateSwapChain(const SwapChainCreateInfo &create_info) {
 
 Shader *RHIVulkan::CreateShader(ShaderType type, const std::filesystem::path &file_name) {
     auto _shader_bin_path = file_name.parent_path() / "bin" / "VULKAN" / file_name.filename();
-    auto spirv_code = ReadFile(_shader_bin_path.generic_string().c_str());
+    auto spirv_code = fs::read_binary_file(_shader_bin_path.generic_string().c_str(), 1);
     auto rsd_path = file_name.parent_path() / "generated" / "rsd" / file_name.filename();
     rsd_path += ".rsd";
-    auto sld_code = ReadFile(rsd_path.generic_string().c_str());
     return Memory::Alloc<VulkanShader>(m_vulkan, type, spirv_code, rsd_path);
 }
 
@@ -299,7 +299,7 @@ void RHIVulkan::InitializeVMA() {
     vulkan_functions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
     vulkan_functions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
 
-    VmaAllocatorCreateInfo vma_create_info = {0};
+    VmaAllocatorCreateInfo vma_create_info = {};
     vma_create_info.device = m_vulkan.device;
     vma_create_info.physicalDevice = m_vulkan.active_gpu;
     vma_create_info.instance = m_vulkan.instance;

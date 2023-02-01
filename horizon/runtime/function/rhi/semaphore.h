@@ -5,7 +5,7 @@
 namespace Horizon::Backend {
 class Semaphore {
   public:
-    Semaphore() noexcept {};
+    Semaphore() noexcept = default;
     virtual ~Semaphore() noexcept = default;
 
     Semaphore(const Semaphore &rhs) noexcept = delete;

@@ -25,7 +25,7 @@
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * See the License for the specific language governing spermissions and
  * limitations under the License.
  */
 
@@ -36,10 +36,11 @@
 // third party libraries
 
 // project headers
+#include "3dmath.h"
 
-namespace Horizon {
+namespace Horizon::math {
 
-void Frustum::update(const math::Matrix44f &matrix) {
+void Frustum::update(const Matrix<4, 4> &matrix) {
     u32 left = static_cast<u32>(Side::LEFT);
     u32 right = static_cast<u32>(Side::RIGHT);
     u32 top = static_cast<u32>(Side::TOP);
@@ -78,12 +79,12 @@ void Frustum::update(const math::Matrix44f &matrix) {
     planes[front].w() = matrix.at(3,3) - matrix.at(3,2);
 
     for (size_t i = 0; i < planes.size(); i++) {
-        float length = sqrtf(planes[i].x() * planes[i].x() + planes[i].y() * planes[i].y() + planes[i].z() * planes[i].z());
+        f32 length = sqrtf(planes[i].x() * planes[i].x() + planes[i].y() * planes[i].y() + planes[i].z() * planes[i].z());
         planes[i] /= length;
     }
 }
 
-bool Frustum::check_sphere(const math::Vector3f& pos, f32 radius) {
+bool Frustum::check_sphere(const Vector<3>& pos, f32 radius) {
     for (size_t i = 0; i < planes.size(); i++) {
         if ((planes[i].x() * pos.x()) + (planes[i].y() * pos.y()) + (planes[i].z() * pos.z()) + planes[i].w() <= -radius) {
             return false;
@@ -91,6 +92,6 @@ bool Frustum::check_sphere(const math::Vector3f& pos, f32 radius) {
     }
     return true;
 }
-const Container::FixedArray<math::Vector4f, 6> &Frustum::get_planes() const { return planes; }
+const Container::FixedArray<Vector<4>, 6> &Frustum::get_planes() const { return planes; }
 
 } // namespace Horizon

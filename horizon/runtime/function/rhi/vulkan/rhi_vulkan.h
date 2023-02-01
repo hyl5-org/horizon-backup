@@ -39,7 +39,7 @@ class RHIVulkan : public RHI {
 
     SwapChain *CreateSwapChain(const SwapChainCreateInfo &create_info) override;
 
-    Shader *CreateShader(ShaderType type, const std::filesystem::path &file_name);
+    Shader *CreateShader(ShaderType type, const std::filesystem::path &file_name) override;
 
     void DestroyShader(Shader *shader_program) override;
 
@@ -88,7 +88,6 @@ class RHIVulkan : public RHI {
     void CreateDevice(Container::Array<const char *> &device_extensions);
     void InitializeVMA();
     void CreateSyncObjects();
-    void DestroySwapChain();
     VkFence GetFence(CommandQueueType type) noexcept;
 
   private:

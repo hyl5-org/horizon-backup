@@ -8,14 +8,14 @@ VulkanPipeline::VulkanPipeline(const VulkanRendererContext &context, const Graph
                                VulkanDescriptorSetAllocator &descriptor_set_manager) noexcept
     : m_context(context), m_descriptor_set_allocator(descriptor_set_manager) {
     m_create_info.type = PipelineType::GRAPHICS;
-    m_create_info.gpci = const_cast<GraphicsPipelineCreateInfo *>(std::move(&create_info));
+    m_create_info.gpci = const_cast<GraphicsPipelineCreateInfo *>(&create_info);
 }
 
 VulkanPipeline::VulkanPipeline(const VulkanRendererContext &context, const ComputePipelineCreateInfo &create_info,
                                VulkanDescriptorSetAllocator &descriptor_set_manager) noexcept
     : m_context(context), m_descriptor_set_allocator(descriptor_set_manager) {
     m_create_info.type = PipelineType::COMPUTE;
-    m_create_info.cpci = const_cast<ComputePipelineCreateInfo *>(std::move(&create_info));
+    m_create_info.cpci = const_cast<ComputePipelineCreateInfo *>(&create_info);
 }
 
 VulkanPipeline::~VulkanPipeline() noexcept {
@@ -23,8 +23,8 @@ VulkanPipeline::~VulkanPipeline() noexcept {
     vkDestroyPipelineLayout(m_context.device, m_pipeline_layout, nullptr);
 }
 void VulkanPipeline::SetComputeShader(Shader *cs) {
-    assert(("shader is not compute shader", cs->GetType() == ShaderType::COMPUTE_SHADER));
-    assert(("pipeline is not compute shader", m_create_info.type == PipelineType::COMPUTE));
+    assert(cs->GetType() == ShaderType::COMPUTE_SHADER);
+    assert(m_create_info.type == PipelineType::COMPUTE);
 
     if (m_cs == nullptr) {
         m_cs = cs;
@@ -36,9 +36,9 @@ void VulkanPipeline::SetComputeShader(Shader *cs) {
 }
 
 void VulkanPipeline::SetGraphicsShader(Shader *vs, Shader *ps) {
-    assert(("shader is not vertex shader", vs->GetType() == ShaderType::VERTEX_SHADER));
-    assert(("shader is not pixel shader", ps->GetType() == ShaderType::PIXEL_SHADER));
-    assert(("pipeline is not graphics pipeline", m_create_info.type == PipelineType::GRAPHICS));
+    assert(vs->GetType() == ShaderType::VERTEX_SHADER);
+    assert(ps->GetType() == ShaderType::PIXEL_SHADER);
+    assert(m_create_info.type == PipelineType::GRAPHICS);
 
     if (m_vs == nullptr && m_ps == nullptr) {
         m_vs = vs;
@@ -56,7 +56,8 @@ DescriptorSet *VulkanPipeline::GetDescriptorSet(ResourceUpdateFrequency frequenc
             m_descriptor_set_allocator.CreateBindlessDescriptorPool();
         }
 
-        VkDescriptorSetAllocateInfo alloc_info{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+        VkDescriptorSetAllocateInfo alloc_info{};
+        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         alloc_info.descriptorPool = m_descriptor_set_allocator.m_bindless_descriptor_pool;
 
         alloc_info.descriptorSetCount = 1;
@@ -64,8 +65,8 @@ DescriptorSet *VulkanPipeline::GetDescriptorSet(ResourceUpdateFrequency frequenc
             this->m_pipeline_layout_desc.descriptor_set_hash_key[static_cast<u32>(frequency)]);
         alloc_info.pSetLayouts = &layout;
 
-        VkDescriptorSetVariableDescriptorCountAllocateInfo count_info{
-            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT};
+        VkDescriptorSetVariableDescriptorCountAllocateInfo count_info{};
+        count_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT;
         u32 max_binding = m_descriptor_set_allocator.k_max_bindless_resources;
         count_info.descriptorSetCount = 1;
         // This number is the max allocatable count
@@ -94,8 +95,8 @@ DescriptorSet *VulkanPipeline::GetDescriptorSet(ResourceUpdateFrequency frequenc
         alloc_info.pSetLayouts = &layout;
         VkDescriptorSet vk_ds;
         CHECK_VK_RESULT(vkAllocateDescriptorSets(m_context.device, &alloc_info, &vk_ds));
-        DescriptorSet *set =
-            Memory::Alloc<VulkanDescriptorSet>(m_context, frequency, rsd.descriptors[static_cast<u32>(frequency)], vk_ds);
+        DescriptorSet *set = Memory::Alloc<VulkanDescriptorSet>(m_context, frequency,
+                                                                rsd.descriptors[static_cast<u32>(frequency)], vk_ds);
         m_descriptor_set_allocator.allocated_sets.push_back(set);
         return set;
     }
@@ -160,9 +161,9 @@ void VulkanPipeline::CreateGraphicsPipeline() {
         graphics_pipeline_create_info.pNext = nullptr;
 
         uint32_t input_binding_count = 0;
-        Container::FixedArray<VkVertexInputBindingDescription, MAX_BINDING_COUNT> input_bindings = {{0}};
+        Container::FixedArray<VkVertexInputBindingDescription, MAX_BINDING_COUNT> input_bindings = {};
         uint32_t input_attribute_count = 0;
-        Container::FixedArray<VkVertexInputAttributeDescription, MAX_ATTRIBUTE_COUNT> input_attributes = {{0}};
+        Container::FixedArray<VkVertexInputAttributeDescription, MAX_ATTRIBUTE_COUNT> input_attributes = {};
         Container::Array<VkPipelineShaderStageCreateInfo> shader_stage_create_infos(&stack_memory);
         LOG_INFO("{}", sizeof(VkPipelineShaderStageCreateInfo));
         VkPipelineRasterizationStateCreateInfo rasterization_state_create_info{};
@@ -209,14 +210,14 @@ void VulkanPipeline::CreateGraphicsPipeline() {
                     binding_value = attrib->binding;
                     ++input_binding_count;
                 }
-
-                input_bindings[input_binding_count - 1].binding = binding_value;
+                u32 binding_index = input_binding_count - 1;
+                input_bindings[binding_index].binding = binding_value;
                 if (attrib->input_rate == VertexInputRate::VERTEX_ATTRIB_RATE_INSTANCE) {
-                    input_bindings[input_binding_count - 1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+                    input_bindings[binding_index].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
                 } else {
-                    input_bindings[input_binding_count - 1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                    input_bindings[binding_index].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
                 }
-                input_bindings[input_binding_count - 1].stride +=
+                input_bindings[binding_index].stride +=
                     GetStrideFromVertexAttributeDescription(attrib->attrib_format, attrib->portion);
 
                 input_attributes[input_attribute_count].location = attrib->location;
@@ -267,7 +268,7 @@ void VulkanPipeline::CreateGraphicsPipeline() {
             view_port.minDepth = 0.0f;
             view_port.maxDepth = 1.0f;
 
-            VkExtent2D extent;
+            VkExtent2D extent{};
             extent.width = ci->view_port_state.width;
             extent.height = ci->view_port_state.height;
 
@@ -314,7 +315,8 @@ void VulkanPipeline::CreateGraphicsPipeline() {
 
         // color blend state
         {
-            color_blend_attachment_state.resize(ci->render_target_formats.color_attachment_count); // TODO(hylu): reserve and construct
+            color_blend_attachment_state.resize(
+                ci->render_target_formats.color_attachment_count); // TODO(hylu): reserve and construct
             for (auto &state : color_blend_attachment_state) {
                 state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
                                        VK_COLOR_COMPONENT_A_BIT;
@@ -376,7 +378,7 @@ void VulkanPipeline::CreateGraphicsPipeline() {
 }
 
 void VulkanPipeline::CreateComputePipeline() {
-    assert(("shader not exist", m_cs != nullptr));
+    assert(m_cs != nullptr);
 
     auto cs = reinterpret_cast<VulkanShader *>(m_cs);
     VkPipelineShaderStageCreateInfo shader_stage_create_info{};
@@ -411,7 +413,7 @@ void VulkanPipeline::CreatePipelineLayout() {
     bool need_descriptorset = !rsd.descriptors.empty();
 
     auto stack_memory = Memory::GetStackMemoryResource(1024);
-    
+
     Container::Array<VkDescriptorSetLayout> layouts(&stack_memory);
     Container::Array<VkPushConstantRange> push_constant_ranges(&stack_memory);
 

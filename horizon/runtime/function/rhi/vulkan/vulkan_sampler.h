@@ -3,7 +3,7 @@
 
 
 #include "runtime/function/rhi/rhi_utils.h"
-#include "runtime/function/rhi/Sampler.h"
+#include "runtime/function/rhi/sampler.h"
 #include "runtime/function/rhi/vulkan/vulkan_command_context.h"
 
 namespace Horizon::Backend {

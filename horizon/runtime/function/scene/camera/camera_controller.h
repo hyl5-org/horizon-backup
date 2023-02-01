@@ -15,8 +15,8 @@
 // project headers
 
 #include "runtime/core/math/hmath.h"
-#include "runtime/core/window/Window.h"
-#include "runtime/function/scene/camera/Camera.h"
+#include "runtime/core/window/window.h"
+#include "runtime/function/scene/camera/camera.h"
 
 namespace Horizon {
 
@@ -38,7 +38,7 @@ class CameraController {
     void ProcessInput(Window* window);
 
   private:
-    Window *m_window = nullptr;
+    // Window *m_window = nullptr;
     Camera *m_camera = nullptr;
 };
 

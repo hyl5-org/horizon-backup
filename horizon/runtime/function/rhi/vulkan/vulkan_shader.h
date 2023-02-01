@@ -1,7 +1,7 @@
 #pragma once
 
 #include "runtime/function/rhi/rhi_utils.h"
-#include "runtime/function/rhi/Shader.h"
+#include "runtime/function/rhi/shader.h"
 #include "runtime/function/rhi/vulkan/vulkan_utils.h"
 
 #include <d3d12shader.h>
@@ -11,7 +11,7 @@ namespace Horizon::Backend {
 class VulkanShader : public Shader {
   public:
     VulkanShader(const VulkanRendererContext &context, ShaderType type,
-                        Container::Array<char>& spirv_code, const std::filesystem::path& rsd_path) noexcept;
+                        Container::Array<u8>& spirv_code, const std::filesystem::path& rsd_path) noexcept;
     virtual ~VulkanShader() noexcept;
     VulkanShader(const VulkanShader &rhs) noexcept = delete;
     VulkanShader &operator=(const VulkanShader &rhs) noexcept = delete;

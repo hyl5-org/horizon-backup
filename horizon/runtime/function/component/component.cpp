@@ -6,7 +6,7 @@
  * \date   January 2023
  *********************************************************************/
 
-#include "Component.h"
+#include "component.h"
 
 // standard libraries
 

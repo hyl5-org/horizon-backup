@@ -1,11 +1,12 @@
+#include "include/common/descriptor.hlsl"
 #include "include/postprocess/postprocess.hlsl"
-RES(RWTexture2D<float4>, ssao_blur_in, UPDATE_FREQ_PER_FRAME, u0, binding = 0);
-RES(RWTexture2D<float4>, ssao_blur_out, UPDATE_FREQ_PER_FRAME, u1, binding = 1);
+RES(RWTexture2D<float4>, ssao_blur_in, UPDATE_FREQ_PER_FRAME); // TODO(hylu): replace with float
+RES(RWTexture2D<float4>, ssao_blur_out, UPDATE_FREQ_PER_FRAME);
 
-NUM_THREADS(8, 8, 1)
+[numthreads(8, 8, 1)]
 void CS_MAIN( uint3 thread_id: SV_DispatchThreadID) 
 {
-    INIT_MAIN;
+    
     
     
     float4 result = float4(0.0, 0.0, 0.0, 0.0);
@@ -15,13 +16,13 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID)
         for (int y = -2; y < 2; ++y) 
         {
             uint2 coord = thread_id.xy + uint2(x, y);
-            result += LoadRWTex2D(Get(ssao_blur_in), coord).r;
+            result += ssao_blur_in[coord].r;
         }
     }
     result = result / (4.0 * 4.0);
     
-    Write2D(Get(ssao_blur_out), thread_id.xy, result);
+    ssao_blur_out[thread_id.xy] = result;
 
-    RETURN();
+    
 }
 

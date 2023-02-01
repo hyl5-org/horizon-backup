@@ -13,6 +13,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC third_party)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER "Horizon/Runtime")
 
-if(MSVC)
-  target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /external:anglebrackets /external:W0)
+if (WIN32)
+  message("using WIN32")
+  if(MSVC)
+    message("using MSVC")
+    target_compile_options(${PROJECT_NAME} PRIVATE /MP /permissive /W4 /w14640 /WX /external:anglebrackets /external:W0)
+   endif()
+elseif(LINUX)
+  message("using LINUX")
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic Weverything)
+  
 endif()

@@ -5,9 +5,6 @@
 #include "include/indirectcommand/indirect_command.hlsl"
 #include "include/geometry/geometry.hlsl"
 
-ENABLE_WAVEOPS()
-
-
 RES(Buffer(uint3), index_buffers[], UPDATE_FREQ_BINDLESS);
 RES(Buffer(uint3), compacted_index_buffer, UPDATE_FREQ_PER_FRAME);
 

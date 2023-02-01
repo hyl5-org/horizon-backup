@@ -3,15 +3,13 @@
 #include "include/indirectcommand/indirect_command.hlsl"
 #include "include/translation/translation.hlsl"
 
-ENABLE_WAVEOPS()
-
-RES(RWBuffer(uint), draw_count, UPDATE_FREQ_PER_FRAME, u1, binding = 0);
-RES(RWBuffer(DrawIndexedInstancedCommand), indirect_draw_command, UPDATE_FREQ_PER_FRAME, u1, binding = 1);
-RES(RBuffer(MeshInfo), mesh_infos, UPDATE_FREQ_PER_FRAME, u1, binding = 2);
-RES(RWBuffer(uint), mesh_index_offsets, UPDATE_FREQ_PER_FRAME, u1, binding = 3);
-RES(RWBuffer(uint), visible_meshes, UPDATE_FREQ_PER_FRAME, u1, binding = 7);
-RES(RWBuffer(uint3), compact_index_buffer_dispatch_command, UPDATE_FREQ_PER_FRAME, u1, binding = 6);
-CBUFFER(FrustumCullingConstants, UPDATE_FREQ_PER_FRAME, b4, binding = 4)
+RES(RWBuffer(uint), draw_count, UPDATE_FREQ_PER_FRAME);
+RES(RWBuffer(DrawIndexedInstancedCommand), indirect_draw_command, UPDATE_FREQ_PER_FRAME);
+RES(RBuffer(MeshInfo), mesh_infos, UPDATE_FREQ_PER_FRAME);
+RES(RWBuffer(uint), mesh_index_offsets, UPDATE_FREQ_PER_FRAME);
+RES(RWBuffer(uint), visible_meshes, UPDATE_FREQ_PER_FRAME);
+RES(RWBuffer(uint3), compact_index_buffer_dispatch_command, UPDATE_FREQ_PER_FRAME);
+CBUFFER(FrustumCullingConstants, UPDATE_FREQ_PER_FRAME)
 {
     DATA(FrustumPlanes, camera_frustum_planes, None);
     DATA(uint, mesh_count, None);
@@ -40,7 +38,7 @@ bool FrustumCull(ExpandedAABB expanded_aabb, FrustumPlanes frustum_planes) {
 NUM_THREADS(WORK_GROUP_SIZE, 1, 1)
 void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupThreadID(uint3) lane_id) 
 {
-    INIT_MAIN;
+    
 
     if (thread_id.x > mesh_count) {
         return;
@@ -91,5 +89,5 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupThreadID(uint3) lane
         Get(compact_index_buffer_dispatch_command)[0].x = AlignUp(Get(compact_index_buffer_dispatch_command)[0].x, WORK_GROUP_SIZE);
     }
     
-    RETURN();
+    
 }

@@ -48,16 +48,12 @@ find_package(unofficial-vulkan-memory-allocator REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator)
 
 # d3dma
-find_package(d3d12-memory-allocator REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC unofficial::d3d12-memory-allocator)
+# find_package(d3d12-memory-allocator REQUIRED)
+# target_link_libraries(${PROJECT_NAME} PUBLIC unofficial::d3d12-memory-allocator)
 
 # doctest
 find_package(doctest CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC doctest::doctest)
-
-#argparse
-find_package(argparse CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC argparse::argparse)
 
 find_path(STB_INCLUDE_DIRS "stb_c_lexer.h")
 target_include_directories(${PROJECT_NAME} PUBLIC ${STB_INCLUDE_DIRS})
@@ -85,3 +81,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE meshoptimizer::meshoptimizer)
 
 find_package(mimalloc CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc)
+
+find_package(nlohmann_json CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json)

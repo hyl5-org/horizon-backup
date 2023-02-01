@@ -2,7 +2,7 @@
  * \file   mesh.h
  * \brief  
  * 
- * \author hanyanglu
+ * \author hylu
  * \date   January 2023
  *********************************************************************/
 
@@ -23,7 +23,6 @@
 #include "runtime/function/scene/material/material_description.h"
 
 #include "runtime/function/resource/resources/vertex/vertex_description.h"
-#include "runtime/function/resource/resources/aabb/aabb.h"
 #include "runtime/function/component/transform.h"
 
 namespace Horizon {
@@ -35,7 +34,7 @@ struct MeshPrimitive {
     u32 index_offset{};
     u32 index_count{};
     u32 material_id{};
-    AABB aabb;
+    math::AABB aabb;
 };
 
 struct MeshNode {

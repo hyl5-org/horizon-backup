@@ -4,7 +4,7 @@
 
 #include "runtime/function/rhi/buffer.h"
 #include "runtime/function/rhi/rhi_utils.h"
-#include "runtime/function/rhi/Sampler.h"
+#include "runtime/function/rhi/sampler.h"
 #include "runtime/function/rhi/texture.h"
 
 namespace Horizon::Backend {
@@ -12,7 +12,7 @@ namespace Horizon::Backend {
 class DescriptorSet {
   public:
     DescriptorSet(ResourceUpdateFrequency frequency) noexcept : update_frequency(frequency){};
-    virtual ~DescriptorSet() noexcept {};
+    virtual ~DescriptorSet() noexcept = default;
 
     DescriptorSet(const DescriptorSet &rhs) noexcept = delete;
     DescriptorSet &operator=(const DescriptorSet &rhs) noexcept = delete;

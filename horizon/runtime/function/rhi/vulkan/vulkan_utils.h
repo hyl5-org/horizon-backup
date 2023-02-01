@@ -2,7 +2,7 @@
  * \file   vulkan_utils.h
  * \brief  
  * 
- * \author hanyanglu
+ * \author hylu
  * \date   January 2023
  *********************************************************************/
 #pragma once

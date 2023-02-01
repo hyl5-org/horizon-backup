@@ -18,8 +18,9 @@ namespace Horizon {
 
 using namespace Input;
 
-Camera::Camera(const CameraSetting& setting, const math::Vector3f &eye, const math::Vector3f &at, const math::Vector3f &up) noexcept
-    : m_eye(eye), m_at(at), m_up(up),m_setting(setting) {
+Camera::Camera(const CameraSetting &setting, const math::Vector3f &eye, const math::Vector3f &at,
+               const math::Vector3f &up) noexcept
+    : m_setting(setting), m_eye(eye), m_at(at), m_up(up) {
     m_forward = math::Normalize(m_at - m_eye);
     m_right = math::Cross(m_forward, m_up);
     UpdateViewMatrix();

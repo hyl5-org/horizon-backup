@@ -17,6 +17,7 @@
 
 // project headers
 #include "runtime/core/log/log.h"
+#include "runtime/core/io/file_system.h"
 
 namespace Horizon {
 
@@ -411,7 +412,7 @@ void TextureLoader::LoadPNG(const std::filesystem::path &path, TextureDataDesc &
 
 void TextureLoader::LoadDDS(const std::filesystem::path &path, TextureDataDesc &texture_info) {
 
-    auto raw_data = ReadFile(path.string().c_str());
+    auto raw_data = fs::read_binary_file(path.string().c_str(), 1);
     if (raw_data.empty()) {
         return;
     }
@@ -430,7 +431,7 @@ void TextureLoader::LoadDDS(const std::filesystem::path &path, TextureDataDesc &
     } 
     texture_info.format = GetTextureFormatFromDXGIForamt(desc.format);
     raw_data = {raw_data.begin() + desc.headerSize, raw_data.end()};
-    texture_info.raw_data.swap(raw_data);
+    texture_info.raw_data.swap((raw_data));
 
     texture_info.data_offset_map.resize(6, Container::Array<u32>(desc.numMips));
 

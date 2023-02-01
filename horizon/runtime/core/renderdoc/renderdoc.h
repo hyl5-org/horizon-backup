@@ -11,7 +11,6 @@
 #ifdef RENDERDOC_ENABLED
 
 // standard libraries
-#include <cassert>
 
 // third party libraries
 #include <libloaderapi.h>

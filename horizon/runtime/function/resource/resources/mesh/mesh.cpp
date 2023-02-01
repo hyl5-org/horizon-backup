@@ -3,15 +3,13 @@
 #include <algorithm>
 
 #include <meshoptimizer.h>
-
-#include "runtime/function/resource/resource_loader/texture/texture_loader.h"
-
-#include <assimp/pbrmaterial.h>
-#include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/GltfMaterial.h>
 
 #include "runtime/core/log/log.h"
 #include "runtime/function/rhi/rhi.h"
+#include "runtime/function/resource/resource_loader/texture/texture_loader.h"
 
 namespace Horizon {
 
@@ -57,27 +55,30 @@ void Mesh::ProcessMaterials(const aiScene *scene) {
     Container::Array<aiMaterial *> ms(&stack_memory);
     materials.resize(scene->mNumMaterials);
 
-    aiReturn ret;
+    [[maybe_unused]] aiReturn ret;
 
     for (u32 i = 0; i < scene->mNumMaterials; i++) {
 
         materials[i] = Memory::Alloc<Material>();
 
-        bool unlit;
-        scene->mMaterials[i]->Get(AI_MATKEY_GLTF_UNLIT, unlit);
-        if (unlit == true) {
-            materials[i]->shading_model = ShadingModel::SHADING_MODEL_UNLIT;
-        }
+        //bool unlit;
+        //ret = scene->mMaterials[i]->Get(AI_MATKEY_GLTF_UNLIT, unlit);
+        //assert(ret = aiReturn::aiReturn_SUCCESS);
+        //if (unlit == true) {
+        //    materials[i]->shading_model = ShadingModel::SHADING_MODEL_UNLIT;
+        //}
         // shading model
         bool two_side;
-        scene->mMaterials[i]->Get(AI_MATKEY_TWOSIDED, two_side);
+        ret = scene->mMaterials[i]->Get(AI_MATKEY_TWOSIDED, two_side);
+        assert(ret = aiReturn::aiReturn_SUCCESS);
         if (two_side == true) {
             materials[i]->shading_model = ShadingModel::SHADING_MODEL_TWO_SIDE;
         }
         // blend state
 
         aiString alphaMode;
-        scene->mMaterials[i]->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
+        ret = scene->mMaterials[i]->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
+        assert(ret = aiReturn::aiReturn_SUCCESS);
         if (strcmp(alphaMode.C_Str(), "BLEND") == 0) {
             materials[i]->blend_state = BlendState::BLEND_STATE_TRANSPARENT;
             materials[i]->blend_state = BlendState::BLEND_STATE_MASKED; // TODO()
@@ -213,7 +214,7 @@ void Mesh::Load(const std::filesystem::path &path) {
         m_mesh_primitives[m].index_offset = static_cast<u32>(m_indices.size());
         m_mesh_primitives[m].index_count = mesh->mNumFaces * 3;
         m_mesh_primitives[m].material_id = mesh->mMaterialIndex;
-        memcpy(&m_mesh_primitives[m].aabb, &mesh->mAABB, sizeof(AABB));
+        memcpy(&m_mesh_primitives[m].aabb, &mesh->mAABB, sizeof(math::AABB));
 
         for (u32 f = 0; f < mesh->mNumFaces; f++) {
             // use global indices

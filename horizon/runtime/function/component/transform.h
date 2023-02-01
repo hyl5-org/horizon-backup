@@ -14,7 +14,7 @@
 
 // project headers
 
-#include "Component.h"
+#include "component.h"
 
 #include "runtime/core/math/hmath.h"
 

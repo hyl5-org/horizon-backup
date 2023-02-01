@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include "runtime/core/utils/functions.h"
+#include "runtime/core/io/file_system.h"
 
 namespace Horizon::Backend {
 
@@ -25,7 +26,7 @@ void Pipeline::ParseRootSignature() {
 
 void Pipeline::ParseRootSignatureFromShader(Shader *shader) {
     auto &path = shader->GetRootSignatureDescriptionPath();
-    auto rsd_code = ReadFile(path.generic_string().c_str());
+    auto rsd_code = fs::read_text_file(path.string().c_str());
     nlohmann::json json_data = nlohmann::json::parse(rsd_code);
 
     DescriptorDesc desc{};

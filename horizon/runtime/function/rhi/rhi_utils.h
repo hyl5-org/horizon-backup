@@ -2,13 +2,14 @@
 
 
 #include <fstream>
+#include <filesystem>
 
 //#include "dx12/stdafx.h"
 //#include <d3d12.h>
 
 #include "runtime/core/log/log.h"
 #include "runtime/core/math/hmath.h"
-#include "runtime/core/container/Container.h"
+#include "runtime/core/container/container.h"
 #include "runtime/core/utils/definations.h"
 #include "runtime/function/rhi/vulkan/vulkan_config.h"
 
@@ -288,7 +289,7 @@ struct VertexAttributeDescription {
 
 struct VertexInputState {
     u32 attribute_count;
-    VertexAttributeDescription attributes[MAX_ATTRIBUTE_COUNT];
+    Container::FixedArray<VertexAttributeDescription, MAX_ATTRIBUTE_COUNT> attributes;
 };
 
 enum class PrimitiveTopology { POINT_LIST, LINE_LIST, TRIANGLE_LIST };
@@ -423,11 +424,11 @@ inline ShaderStageFlags GetShaderStageFlagsFromShaderType(ShaderType type) {
     }
 }
 
-typedef union ClearColorValue {
+union ClearColorValue {
     Container::FixedArray<f32, 4> float32;
     Container::FixedArray<i32, 4> int32;
     Container::FixedArray<u32, 4> uint32;
-} ClearColorValue;
+};
 
 struct ClearValueDepthStencil {
     f32 depth;
@@ -463,7 +464,7 @@ struct TextureDataDesc {
     u32 mipmap_count = 1;
     TextureFormat format;
     TextureType type;
-    Container::Array<char> raw_data;
+    Container::Array<u8> raw_data;
     // we don't have a unified runtime format for mipmap/layer, so we have to store that
     Container::Array<Container::Array<u32>> data_offset_map;
 };
@@ -584,20 +585,20 @@ inline VkDescriptorType util_to_vk_descriptor_type(DescriptorType type) {
 }
 
 
-inline Container::Array<char> ReadFile(const char *path) {
-    std::ifstream file(path, std::ios::ate | std::ios::binary);
-    if (!file.is_open()) {
-        LOG_ERROR("failed to open shader file: {}", path);
-        return {};
-    }
-    size_t fileSize = (size_t)file.tellg();
-    Container::Array<char> buffer(fileSize);
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-    file.close();
-
-    return buffer;
-}
+//inline Container::Array<char> ReadFile(const char *path) {
+//    std::ifstream file(path, std::ios::ate | std::ios::binary);
+//    if (!file.is_open()) {
+//        LOG_ERROR("failed to open shader file: {}", path);
+//        return {};
+//    }
+//    size_t fileSize = (size_t)file.tellg();
+//    Container::Array<char> buffer(fileSize);
+//    file.seekg(0);
+//    file.read(buffer.data(), fileSize);
+//    file.close();
+//
+//    return buffer;
+//}
 
 u32 GetBytesFromTextureFormat(TextureFormat format);
 
@@ -696,6 +697,8 @@ enum class ShaderTargetProfile {
     CS_6_7,
     MS_6_7,
 };
+
+enum class ShaderModuleVersion { SM_6_0, SM_6_1, SM_6_2, SM_6_3, SM_6_4, SM_6_5, SM_6_6, SM_6_7 };
 
 inline const wchar_t* ToDxcTargetProfile(ShaderTargetProfile tp) {
     switch (tp) {
@@ -818,6 +821,14 @@ inline const wchar_t* ToDxcTargetProfile(ShaderTargetProfile tp) {
 
 enum class ShaderTargetAPI {
     SPIRV, DXIL
+};
+
+struct ShaderCompilationSettings {
+    ShaderModuleVersion sm_version{ShaderModuleVersion::SM_6_6};
+    ShaderOptimizationLevel optimization_level;
+    ShaderTargetAPI target_api;
+    std::filesystem::path input_dir, output_dir;
+    Container::Array<Container::String> shader_list; 
 };
 
 struct ShaderCompilationArgs {

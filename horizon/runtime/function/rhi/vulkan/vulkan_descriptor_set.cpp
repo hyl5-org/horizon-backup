@@ -5,7 +5,7 @@ namespace Horizon::Backend {
 VulkanDescriptorSet::VulkanDescriptorSet(const VulkanRendererContext &context, ResourceUpdateFrequency frequency,
                                          const Container::HashMap<Container::String, DescriptorDesc> &write_descs,
                                          VkDescriptorSet set) noexcept
-    : DescriptorSet(frequency), m_context(context), m_set(set), write_descs(write_descs) {}
+    : DescriptorSet(frequency), m_context(context), write_descs(write_descs), m_set(set) {}
 
 void VulkanDescriptorSet::SetResource(Buffer *buffer, const Container::String &resource_name) {
     auto res = write_descs.find(resource_name);

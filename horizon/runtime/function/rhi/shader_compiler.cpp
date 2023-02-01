@@ -4,6 +4,8 @@
 #include "runtime/core/memory/allocators.h"
 #include "runtime/core/platform/platform.h"
 #include "runtime/core/utils/functions.h"
+#include "runtime/core/encryption/md5.h"
+#include "runtime/core/io/file_system.h"
 
 namespace Horizon {
 
@@ -15,11 +17,43 @@ ShaderCompiler::ShaderCompiler() noexcept {
 
 ShaderCompiler::~ShaderCompiler() noexcept {}
 
-void ShaderCompiler::CompileFromFile(const std::filesystem::path &path, const ShaderCompilationArgs &compile_args) {
-    this->Compile(ReadFile(path.string().c_str()), compile_args);
+void ShaderCompiler::Compile(const Container::String &blob, const ShaderCompilationArgs &compile_args) {
+    ShaderCompiler::get().InternalCompile(blob, compile_args);
 }
 
-void ShaderCompiler::Compile(const Container::Array<char> &hlsl_text, const ShaderCompilationArgs &compile_args) {
+//void BuildShaderDependencyGraph(const ShaderCompilationSettings &settings){
+//
+//};
+
+void CheckMd5() {
+
+}
+
+void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
+    if (ENABLE_SHADER_CACHE) {
+        //BuildShaderDependencyGraph(settings);
+        CheckMd5();
+    }
+    
+    for (auto &shader : settings.shader_list) {
+        auto path = settings.input_dir / shader;
+        ShaderCompilationArgs args{};
+
+        args.entry_point = "CS_MAIN";
+        args.optimization_level = ShaderOptimizationLevel::DEBUG;
+        args.target_api = ShaderTargetAPI::SPIRV;
+        args.target_profile = ShaderTargetProfile::CS_6_6;
+        args.output_file_name = "ssao.hsb";
+        args.include_path = "C:/hylu/horizon/horizon/assets/hlsl/include";
+        // blob = readfile;
+        const Container::String str {path.string()};
+        auto blob = fs::read_shader(str);
+        ShaderCompiler::Compile(blob, args);
+    }
+}
+
+void ShaderCompiler::InternalCompile(const Container::String &hlsl_text,
+                                     const ShaderCompilationArgs &compile_args) {
     IDxcBlobEncoding *hlsl_blob{};
     CHECK_DX_RESULT(idxc_utils->CreateBlob(hlsl_text.data(), static_cast<u32>(hlsl_text.size()), 0, &hlsl_blob));
 
@@ -33,7 +67,7 @@ void ShaderCompiler::Compile(const Container::Array<char> &hlsl_text, const Shad
     compilation_arguments.push_back(ep.c_str());
     // target profile
     compilation_arguments.push_back(L"-T");
-    const wchar_t* tp = ToDxcTargetProfile(compile_args.target_profile);
+    const wchar_t *tp = ToDxcTargetProfile(compile_args.target_profile);
     compilation_arguments.push_back(tp);
 
     compilation_arguments.push_back(DXC_ARG_WARNINGS_ARE_ERRORS); // warning are errors
@@ -49,20 +83,6 @@ void ShaderCompiler::Compile(const Container::Array<char> &hlsl_text, const Shad
     ip = {compile_args.include_path.begin(), compile_args.include_path.end()};
     compilation_arguments.push_back(L"I");
     compilation_arguments.push_back(ip.c_str());
-    
-    // descriptor set definations
-    if (0) {
-        compilation_arguments.push_back(L"-D");
-        compilation_arguments.push_back(L"UPDATE_FREQ_NONE 0");
-        compilation_arguments.push_back(L"-D");
-        compilation_arguments.push_back(L"UPDATE_FREQ_PER_FRAME 1");
-        compilation_arguments.push_back(L"-D");
-        compilation_arguments.push_back(L"UPDATE_FREQ_PER_MATERIAL 2");
-        compilation_arguments.push_back(L"-D");
-        compilation_arguments.push_back(L"UPDATE_FREQ_PER_DRAW 3");
-        compilation_arguments.push_back(L"-D");
-        compilation_arguments.push_back(L"UPDATE_FREQ_BINDLESS 4");
-    }
 
     if (USE_ROW_MAJOR_MATRIX) {
         compilation_arguments.push_back(DXC_ARG_PACK_MATRIX_ROW_MAJOR);

@@ -14,7 +14,7 @@ class VulkanCommandList : public CommandList {
     VulkanCommandList(const VulkanRendererContext &context, CommandQueueType type,
                       VkCommandBuffer command_buffer) noexcept;
 
-    virtual ~VulkanCommandList() noexcept;
+    virtual ~VulkanCommandList() noexcept = default;
     VulkanCommandList(const VulkanCommandList &rhs) noexcept = delete;
     VulkanCommandList &operator=(const VulkanCommandList &rhs) noexcept = delete;
     VulkanCommandList(VulkanCommandList &&rhs) noexcept = delete;

@@ -22,12 +22,6 @@
 
 namespace Horizon {
 
-inline Container::String HrToString(HRESULT hr) {
-    char s_str[64] = {};
-    sprintf_s(s_str, "HRESULT of 0x%08X", static_cast<u32>(hr));
-    return Container::String(s_str);
-}
-
 class Log : public Singleton<Log> {
   public:
     enum loglevel : u8 { debug, info, warn, error, fatal };

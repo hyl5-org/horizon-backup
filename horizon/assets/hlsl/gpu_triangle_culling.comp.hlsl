@@ -9,21 +9,19 @@
 #define ENABLE_CULL_FRUSTUM				1
 #define ENABLE_CULL_SMALL_PRIMITIVES	1
 
-ENABLE_WAVEOPS()
+RES(RBuffer(MeshInfo), mesh_infos, UPDATE_FREQ_PER_FRAME);
+RES(RWBuffer(uint), mesh_index_offsets, UPDATE_FREQ_PER_FRAME);
+RES(RWBuffer(uint), visible_meshes, UPDATE_FREQ_PER_FRAME);
 
-RES(RBuffer(MeshInfo), mesh_infos, UPDATE_FREQ_PER_FRAME, u1, binding = 2);
-RES(RWBuffer(uint), mesh_index_offsets, UPDATE_FREQ_PER_FRAME, u1, binding = 3);
-RES(RWBuffer(uint), visible_meshes, UPDATE_FREQ_PER_FRAME, u1, binding = 7);
-
-RES(Buffer(uint3), index_buffers[], UPDATE_FREQ_BINDLESS, t3, binding = 2);
-RES(Buffer(uint3), compacted_index_buffer, UPDATE_FREQ_PER_FRAME, t3, binding = 2); // compact rest triangle into new index buffer
+RES(Buffer(uint3), index_buffers[], UPDATE_FREQ_BINDLESS);
+RES(Buffer(uint3), compacted_index_buffer, UPDATE_FREQ_PER_FRAME); // compact rest triangle into new index buffer
 
 // uint GetMeshID(uint index_id) { return Get(mesh_id_list)[index_id]; }
 
 NUM_THREADS(WORK_GROUP_SIZE, 1, 1)
 void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupThreadID(uint3) lane_id) 
 {
-    INIT_MAIN;
+    
 
     // uint index_id = thread_id.x;
     // uint mesh_id = GetMeshID(thread_id.x);
@@ -34,7 +32,7 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupThreadID(uint3) lane
     //     AtomicAdd(current_mesh_id, 1);
     // }
 
-    RETURN();
+    
 }
 
 // triangle culling cull single triangle to reduce vertex count into gpu.

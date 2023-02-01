@@ -34,19 +34,18 @@ void SceneManager::AddMesh(Mesh *mesh) {
     scene_meshes.push_back(mesh); 
 }
 
-void SceneManager::RemoveMesh(Mesh *mesh) {
-    mesh->m_nodes; //TODO:
-}
+//void SceneManager::RemoveMesh(Mesh *mesh) {
+//    mesh->m_nodes; //TODO:
+//}
 
 void SceneManager::AddDecal(Decal *decal) { scene_decals.push_back(decal); }
 
-void SceneManager::RemoveDecal(Decal *decal) {
-    decal->m_path;
-    //TODO:
-}
+//void SceneManager::RemoveDecal(Decal *decal) {
+//    decal->m_path;
+//    //TODO:
+//}
 
 void SceneManager::CreateMeshResources() {
-    
     u32 texture_offset = 0;
     u32 material_offset = 0;
     u32 vertex_buffer_offset = 0;

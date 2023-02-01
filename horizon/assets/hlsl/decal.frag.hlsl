@@ -28,7 +28,7 @@ struct MaterialDescription {
     float2 pad3;
 };
 
-RES(Tex2D(float4), decal_material_textures[], UPDATE_FREQ_BINDLESS, t3, binding = 0);
+RES(Texture2D(float4), decal_material_textures[], UPDATE_FREQ_BINDLESS);
 
 STRUCT(InstanceParameter)
 {
@@ -38,15 +38,15 @@ STRUCT(InstanceParameter)
     DATA(uint, material_id, None);
 };
 
-RES(Buffer(InstanceParameter), decal_instance_parameter, UPDATE_FREQ_PER_FRAME, t3, binding = 1);
+RES(Buffer(InstanceParameter), decal_instance_parameter, UPDATE_FREQ_PER_FRAME);
 
-RES(Buffer(MaterialDescription), decal_material_descriptions[], UPDATE_FREQ_PER_FRAME, t3, binding = 3);
+RES(Buffer(MaterialDescription), decal_material_descriptions[], UPDATE_FREQ_PER_FRAME);
 
-RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME, s0, binding = 4);
+RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME);
 
-RES(Tex2D(float), depth_tex, UPDATE_FREQ_PER_FRAME, t3, binding = 5);
+RES(Texture2D(float), depth_tex, UPDATE_FREQ_PER_FRAME);
 
-CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME, b1, binding = 6)
+CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME)
 {
     DATA(float4x4, camera_view, None);
     DATA(float4x4, camera_projection, None);
@@ -90,7 +90,7 @@ STRUCT(PSOutput) {
 
 PSOutput PS_MAIN(VSOutput vsout, SV_PrimitiveID(uint) tri_id) 
 {
-    INIT_MAIN;
+    
     PSOutput psout;
 
     // float2 uv = vsout.position.xy / float2(Get(resolution.xy));

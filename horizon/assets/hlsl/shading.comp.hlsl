@@ -1,3 +1,4 @@
+#include "include/common/descriptor.hlsl"
 #include "include/shading/material_params_defination.hlsl"
 #include "include/shading/light_defination.hlsl"
 #include "include/shading/lighting.hlsl"
@@ -6,15 +7,15 @@
 #include "include/translation/translation.hlsl"
 // per frame resources
 
-RES(Tex2D(float4), gbuffer0_tex, UPDATE_FREQ_PER_FRAME, t0, binding = 0);
-RES(Tex2D(float4), gbuffer1_tex, UPDATE_FREQ_PER_FRAME, t1, binding = 1);
-RES(Tex2D(float4), gbuffer2_tex, UPDATE_FREQ_PER_FRAME, t2, binding = 2);
-RES(Tex2D(float4), gbuffer3_tex, UPDATE_FREQ_PER_FRAME, t3, binding = 3);
-RES(Tex2D(float4), depth_tex, UPDATE_FREQ_PER_FRAME, t3, binding = 4);
+RES(Texture2D<float4>, gbuffer0_tex, UPDATE_FREQ_PER_FRAME);
+RES(Texture2D<float4>, gbuffer1_tex, UPDATE_FREQ_PER_FRAME);
+RES(Texture2D<float4>, gbuffer2_tex, UPDATE_FREQ_PER_FRAME);
+RES(Texture2D<float4>, gbuffer3_tex, UPDATE_FREQ_PER_FRAME);
+RES(Texture2D<float4>, depth_tex, UPDATE_FREQ_PER_FRAME);
 
-RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME, s0, binding = 5);
+RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME);
 
-CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME, b1, binding = 15)
+CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME)
 {
     DATA(float4x4, camera_view, None);
     DATA(float4x4, camera_projection, None);
@@ -27,43 +28,43 @@ CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME, b1, binding = 15)
     DATA(float, ibl_intensity, None);
 };
 
-CBUFFER(LightCountUb, UPDATE_FREQ_PER_FRAME, b4, binding = 7)
+CBUFFER(LightCountUb, UPDATE_FREQ_PER_FRAME)
 {
     DATA(uint, directional_light_count, None);
     DATA(uint, local_light_count, None);
 };
 
-CBUFFER(DirectionalLightDataUb, UPDATE_FREQ_PER_FRAME, b5, binding = 8)
+CBUFFER(DirectionalLightDataUb, UPDATE_FREQ_PER_FRAME)
 {
     DATA(LightParams, directional_light_data[MAX_DYNAMIC_LIGHT_COUNT], None);
 };
 
-CBUFFER(LocalLightDataUb, UPDATE_FREQ_PER_FRAME, b5, binding = 16)
+CBUFFER(LocalLightDataUb, UPDATE_FREQ_PER_FRAME)
 {
     DATA(LightParams, local_light_data[MAX_DYNAMIC_LIGHT_COUNT], None);
 };
 
-RES(RWTexture2D<float4>, out_color, UPDATE_FREQ_PER_FRAME, t3, binding = 9);
+RES(RWTexture2D<float4>, out_color, UPDATE_FREQ_PER_FRAME);
 
-RES(RTex2D(float4), ao_tex, UPDATE_FREQ_PER_FRAME, t4, binding = 10);
+RES(RWTexture2D<float4>, ao_tex, UPDATE_FREQ_PER_FRAME);
 
-CBUFFER(DiffuseIrradianceSH3, UPDATE_FREQ_PER_FRAME, b0, binding = 11)
+CBUFFER(DiffuseIrradianceSH3, UPDATE_FREQ_PER_FRAME)
 {
     DATA(float3, sh[9], None);
 };
 
-RES(TexCube(float4), specular_map, UPDATE_FREQ_PER_FRAME, t5, binding = 12);
-RES(Tex2D(float4), specular_brdf_lut, UPDATE_FREQ_PER_FRAME, t5, binding = 13);
-RES(SamplerState, ibl_sampler, UPDATE_FREQ_PER_FRAME, t5, binding = 14);
+RES(TexCube(float4), specular_map, UPDATE_FREQ_PER_FRAME);
+RES(Texture2D(float4), specular_brdf_lut, UPDATE_FREQ_PER_FRAME);
+RES(SamplerState, ibl_sampler, UPDATE_FREQ_PER_FRAME);
 
-NUM_THREADS(8, 8, 1)
+[numthreads(8, 8, 1)]
 void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupID(uint3) groupID) 
 {
-    INIT_MAIN;
+    
     uint2 _resolution = Get(resolution).xy - uint2(1.0, 1.0);
 
     if (thread_id.x>_resolution.x || thread_id.y>_resolution.y) {
-        RETURN();
+        
     }
 
     float2 uv = float2(thread_id.xy) / float2(_resolution);
@@ -111,5 +112,5 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupID(uint3) groupID)
     float3 ambient = IBL(Get(sh), specular, env, n, NoV, mat) * LoadRWTex2D(Get(ao_tex), thread_id.xy).r * Get(ibl_intensity).x;
     radiance.xyz += ambient;
     Write2D(Get(out_color), thread_id.xy, radiance);
-    RETURN();
+    
 }

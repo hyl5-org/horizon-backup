@@ -1,8 +1,8 @@
 
- #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
- #include <doctest/doctest.h>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
- #include "config.h"
+#include "config.h"
 
 namespace TEST::ShaderCompilationTest {
 
@@ -23,9 +23,8 @@ TEST_CASE_FIXTURE(ShaderCompilationTest, "test") {
     args.target_profile = ShaderTargetProfile::CS_6_6;
     args.output_file_name = "ssao.hsb";
     args.include_path = "C:/hylu/horizon/horizon/assets/hlsl/include";
-    std::string path = "C:/hylu/horizon/horizon/assets/hlsl/ssao.comp.hlsl";
-
-    ShaderCompiler::get().CompileFromFile(path.c_str(), args);
+    auto text = fs::read_shader("C:/hylu/horizon/horizon/assets/hlsl/ssao.comp.hlsl");
+    ShaderCompiler::Compile(text, args);
 
     // threading
 }

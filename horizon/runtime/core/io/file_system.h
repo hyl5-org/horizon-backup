@@ -19,7 +19,7 @@
  * \file   file_system.h
  * \brief  
  * 
- * \author hanyanglu
+ * \author hylu
  * \date   January 2023
  *********************************************************************/
 
@@ -161,5 +161,11 @@ void write_image(const u8 *data, const Container::String &filename, const u32 wi
  * @param filename The name of the file
  */
 bool write_json(nlohmann::json &data, const Container::String &filename);
+
+
+Container::String read_text_file(const Container::String &filename);
+
+Container::Array<u8> read_binary_file(const Container::String &filename, const uint32_t count);
+
 
 } // namespace Horizon::fs

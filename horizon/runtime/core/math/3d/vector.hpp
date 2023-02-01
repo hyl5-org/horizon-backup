@@ -9,7 +9,6 @@
 #pragma once
 
 // standard libraries
-#include <array>
 #include <iostream>
 #include <cassert>
 
@@ -17,6 +16,8 @@
 
 // project headers
 #include "runtime/core/utils/definations.h"
+#include "runtime/core/math/common.h"
+#include "runtime/core/container/container.h"
 
 #define VECTOR_ACCESS(CHARACTER, INDEX, LENGTH)                                                                       \
     constexpr T &CHARACTER() {                                                                                         \
@@ -39,11 +40,11 @@ class Vector {
       static_assert(dimension <= MAX_DIMENSION);
     }
 
-    constexpr Vector(const T(&_e)[dimension]) noexcept {
-      static_assert(dimension <= MAX_DIMENSION);
-      for (u32 i = 0; i < dimension;i++) {
-        e[i] = _e[i];
-      }
+    constexpr Vector(const Container::FixedArray<T, dimension> &_e) noexcept {
+        static_assert(dimension <= MAX_DIMENSION);
+        for (u32 i = 0; i < dimension; i++) {
+            e[i] = _e[i];
+        }
     };
 
     // Vector2
@@ -134,7 +135,7 @@ class Vector {
     VECTOR_ACCESS_CONST(a, 3, 4)
 
   private:
-    std::array<T, dimension> e{};
+    Container::FixedArray<T, dimension> e{};
 };
 
 }

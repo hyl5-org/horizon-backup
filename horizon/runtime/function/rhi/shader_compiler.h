@@ -31,8 +31,12 @@ class ShaderCompiler : public Singleton<ShaderCompiler> {
     constexpr ShaderCompiler(ShaderCompiler &&rhs) noexcept = delete;
     constexpr ShaderCompiler &operator=(ShaderCompiler &&rhs) noexcept = delete;
 
-    void CompileFromFile(const std::filesystem::path &path, const ShaderCompilationArgs &compile_args);
-    void Compile(const Container::Array<char> &blob, const ShaderCompilationArgs &compile_args);
+    static void Compile(const Container::String &blob, const ShaderCompilationArgs &compile_args);
+
+    static void CompileShaders(const ShaderCompilationSettings &settings);
+
+  private:
+    void InternalCompile(const Container::String &blob, const ShaderCompilationArgs &compile_args);
 
   private:
     IDxcUtils *idxc_utils;

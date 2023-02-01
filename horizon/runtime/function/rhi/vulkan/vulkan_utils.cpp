@@ -1,5 +1,3 @@
-#pragma once
-
 #include "vulkan_utils.h"
 
 namespace Horizon {

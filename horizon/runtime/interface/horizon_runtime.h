@@ -14,8 +14,8 @@
 
 // project headers
 
-#include "runtime/core/memory/Memory.h"
-#include "runtime/core/window/Window.h"
+#include "runtime/core/memory/memory.h"
+#include "runtime/core/window/window.h"
 
 #include "runtime/function/rhi/rhi_utils.h"
 

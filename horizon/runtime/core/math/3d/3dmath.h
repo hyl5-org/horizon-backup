@@ -9,19 +9,20 @@
 #pragma once
 
 // standard libraries
-#include <type_traits>
 #include <iostream>
+#include <type_traits>
 // third party libraries
 
 // project headers
-#include "runtime/core/platform/platform.h"
-#include "runtime/core/utils/definations.h"
-#include "runtime/core/math/common.h"
-#include "runtime/core/math/circular/circular.h"
 #include "runtime/core/math/3d/matrix.hpp"
 #include "runtime/core/math/3d/quat.hpp"
 #include "runtime/core/math/3d/vector.hpp"
-
+#include "runtime/core/math/3d/frustum.h"
+#include "runtime/core/math/3d/aabb.h"
+#include "runtime/core/math/circular/circular.h"
+#include "runtime/core/math/common.h"
+#include "runtime/core/platform/platform.h"
+#include "runtime/core/utils/definations.h"
 
 namespace Horizon::math {
 
@@ -30,7 +31,7 @@ extern Vector<3> DEFAULT_ORIENTATION;
 // FIXME(hylu): current math lib is only for row major matrix right hand coord
 
 template <u32 dimension, typename T = f32>
-constexpr T dot(const Vector<dimension, T> &a, const Vector<dimension, T> &b) {
+ T dot(const Vector<dimension, T> &a, const Vector<dimension, T> &b) {
     T ret{};
     for (u32 i = 0; i < dimension; i++) {
         ret += a.at(i) * b.at(i);
@@ -39,7 +40,7 @@ constexpr T dot(const Vector<dimension, T> &a, const Vector<dimension, T> &b) {
 }
 
 template <u32 dimension_m, u32 dimension_n, typename T = f32>
-constexpr T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimension_m, dimension_n, T> &b) {
+ T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimension_m, dimension_n, T> &b) {
     T ret{};
     for (u32 i = 0; i < dimension_m; i++) {
         for (u32 j = 0; j < dimension_n; j++) {
@@ -53,7 +54,7 @@ constexpr T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimen
 
 #define ARITHMETIC_VECTOR_OPERATE_VECTOR(OP)                                                                           \
     template <u32 dimension, typename T = f32>                                                                         \
-    constexpr Vector<dimension, T> operator OP(const Vector<dimension, T> &lhs, const Vector<dimension, T> &rhs) {     \
+     Vector<dimension, T> operator OP(const Vector<dimension, T> &lhs, const Vector<dimension, T> &rhs) {     \
         Vector<dimension, T> ret{};                                                                                    \
         for (u32 i = 0; i < dimension; i++) {                                                                          \
             ret.at(i) = lhs.at(i) OP rhs.at(i);                                                                        \
@@ -63,7 +64,7 @@ constexpr T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimen
 
 #define ARITHMETIC_VECTOR_OPERATE_SCALAR(OP)                                                                           \
     template <u32 dimension, typename T = f32>                                                                         \
-    constexpr Vector<dimension, T> operator OP(const Vector<dimension, T> &lhs, const T &rhs) {                        \
+     Vector<dimension, T> operator OP(const Vector<dimension, T> &lhs, const T &rhs) {                        \
         Vector<dimension, T> ret{};                                                                                    \
         for (u32 i = 0; i < dimension; i++) {                                                                          \
             ret.at(i) = lhs.at(i) OP rhs;                                                                              \
@@ -73,7 +74,7 @@ constexpr T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimen
 
 #define ARITHMETIC_SCALAR_OPERATE_VECTOR(OP)                                                                           \
     template <u32 dimension, typename T = f32>                                                                         \
-    constexpr Vector<dimension, T> operator OP(const T &lhs, const Vector<dimension, T> &rhs) {                        \
+     Vector<dimension, T> operator OP(const T &lhs, const Vector<dimension, T> &rhs) {                        \
         Vector<dimension, T> ret{};                                                                                    \
         for (u32 i = 0; i < dimension; i++) {                                                                          \
             ret.at(i) = lhs OP rhs.at(i);                                                                              \
@@ -83,7 +84,7 @@ constexpr T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimen
 
 #define ASSIGNMENT_VECTOR_OPERATE_VECTOR(OP)                                                                           \
     template <u32 dimension, typename T = f32>                                                                         \
-    constexpr Vector<dimension, T> &operator OP(Vector<dimension, T> &lhs, const Vector<dimension, T> &rhs) {          \
+     Vector<dimension, T> &operator OP(Vector<dimension, T> &lhs, const Vector<dimension, T> &rhs) {          \
         for (u32 i = 0; i < dimension; i++) {                                                                          \
             lhs.at(i) OP rhs.at(i);                                                                                    \
         }                                                                                                              \
@@ -92,7 +93,7 @@ constexpr T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimen
 
 #define ASSIGNMENT_VECTOR_OPERATE_SCALAR(OP)                                                                           \
     template <u32 dimension, typename T = f32>                                                                         \
-    constexpr Vector<dimension, T> &operator OP(Vector<dimension, T> &lhs, const T &rhs) {                             \
+     Vector<dimension, T> &operator OP(Vector<dimension, T> &lhs, const T &rhs) {                             \
         for (u32 i = 0; i < dimension; i++) {                                                                          \
             lhs.at(i) OP rhs;                                                                                          \
         }                                                                                                              \
@@ -103,7 +104,7 @@ constexpr T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimen
 
 #define ARITHMETIC_MATRIX_OPERATE_MATRIX(OP)                                                                           \
     template <u32 dimension_m, u32 dimension_n, typename T = f32>                                                      \
-    constexpr Matrix<dimension_m, dimension_n, T> operator OP(const Matrix<dimension_m, dimension_n, T> &lhs,          \
+     Matrix<dimension_m, dimension_n, T> operator OP(const Matrix<dimension_m, dimension_n, T> &lhs,          \
                                                               const Matrix<dimension_m, dimension_n, T> &rhs) {        \
         Matrix<dimension_m, dimension_n, T> ret{};                                                                     \
         for (u32 i = 0; i < dimension_m; i++) {                                                                        \
@@ -116,7 +117,7 @@ constexpr T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimen
 
 #define ARITHMETIC_MATRIX_OPERATE_SCALAR(OP)                                                                           \
     template <u32 dimension_m, u32 dimension_n, typename T = f32>                                                      \
-    constexpr Matrix<dimension_m, dimension_n, T> operator OP(const Matrix<dimension_m, dimension_n, T> &lhs,          \
+     Matrix<dimension_m, dimension_n, T> operator OP(const Matrix<dimension_m, dimension_n, T> &lhs,          \
                                                               const T &rhs) {                                          \
         Matrix<dimension_m, dimension_n, T> ret{};                                                                     \
         for (u32 i = 0; i < dimension_m; i++) {                                                                        \
@@ -128,7 +129,7 @@ constexpr T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimen
     }
 #define ARITHMETIC_SCALAR_OPERATE_MATRIX(OP)                                                                           \
     template <u32 dimension_m, u32 dimension_n, typename T = f32>                                                      \
-    constexpr Matrix<dimension_m, dimension_n, T> operator OP(const T &lhs,                                            \
+     Matrix<dimension_m, dimension_n, T> operator OP(const T &lhs,                                            \
                                                               const Matrix<dimension_m, dimension_n, T> &rhs) {        \
         Matrix<dimension_m, dimension_n, T> ret{};                                                                     \
         for (u32 i = 0; i < dimension_m; i++) {                                                                        \
@@ -141,26 +142,26 @@ constexpr T dot(const Matrix<dimension_m, dimension_n, T> &a, const Matrix<dimen
 
 #define ASSIGNMENT_MATRIX_OPERATE_MATRIX(OP)                                                                           \
     template <u32 dimension_m, u32 dimension_n, typename T = f32>                                                      \
-    constexpr Matrix<dimension_m, dimension_n, T> &operator OP(Matrix<dimension_m, dimension_n, T> &lhs,               \
+     Matrix<dimension_m, dimension_n, T> &operator OP(Matrix<dimension_m, dimension_n, T> &lhs,               \
                                                                const Matrix<dimension_m, dimension_n, T> &rhs) {       \
         for (u32 i = 0; i < dimension_m; i++) {                                                                        \
             for (u32 j = 0; j < dimension_n; j++) {                                                                    \
                 lhs(i, j) OP rhs.at(i, j);                                                                             \
             }                                                                                                          \
         }                                                                                                              \
-        return ret;                                                                                                    \
+        return lhs;                                                                                                    \
     }
 
 #define ASSIGNMENT_MATRIX_OPERATE_SCALAR(OP)                                                                           \
     template <u32 dimension_m, u32 dimension_n, typename T = f32>                                                      \
-    constexpr Matrix<dimension_m, dimension_n, T> &operator OP(Matrix<dimension_m, dimension_n, T> &lhs,               \
+     Matrix<dimension_m, dimension_n, T> &operator OP(Matrix<dimension_m, dimension_n, T> &lhs,               \
                                                                const T &rhs) {                                         \
         for (u32 i = 0; i < dimension_m; i++) {                                                                        \
             for (u32 j = 0; j < dimension_n; j++) {                                                                    \
                 lhs(i, j) OP rhs;                                                                                      \
             }                                                                                                          \
         }                                                                                                              \
-        return ret;                                                                                                    \
+        return lhs;                                                                                                    \
     }
 
 ARITHMETIC_VECTOR_OPERATE_VECTOR(+)
@@ -213,7 +214,7 @@ ASSIGNMENT_MATRIX_OPERATE_SCALAR(/=)
 // matrix vector multiplication
 
 template <u32 dimension_m, u32 dimension_n, typename T = f32>
-constexpr Vector<dimension_m, T> operator*(const Matrix<dimension_m, dimension_n, T> &lhs,
+ Vector<dimension_m, T> operator*(const Matrix<dimension_m, dimension_n, T> &lhs,
                                            const Vector<dimension_n, T> &rhs) {
     Vector<dimension_m, T> ret;
     for (u32 i = 0; i < dimension_m; i++) {
@@ -225,7 +226,7 @@ constexpr Vector<dimension_m, T> operator*(const Matrix<dimension_m, dimension_n
 }
 
 template <u32 dimension_m, u32 dimension_n, u32 dimension_o, typename T = f32>
-constexpr Matrix<dimension_m, dimension_o, T> operator*(const Matrix<dimension_m, dimension_n, T> &lhs,
+ Matrix<dimension_m, dimension_o, T> operator*(const Matrix<dimension_m, dimension_n, T> &lhs,
                                                         const Matrix<dimension_n, dimension_o, T> &rhs) {
     Matrix<dimension_m, dimension_o, T> ret;
     for (u32 i = 0; i < dimension_m; i++) {
@@ -288,7 +289,7 @@ inline Matrix<4, 4, f32> Transpose(const Matrix<4, 4, f32> &m) {
     return ret;
 }
 
-constexpr inline f32 Radians(f32 angle) { return angle * _PI / 180.0f; }
+ inline f32 Radians(f32 angle) { return angle * _PI / 180.0f; }
 
 inline Vector<3, f32> ToEular(const Quaternion<f32> &q) {
     f32 x = q.x();
@@ -309,16 +310,16 @@ inline Vector<3, f32> ToEular(const Quaternion<f32> &q) {
         const f32 m12 = 2.f * x * y + 2.f * z * w;
         const f32 m22 = 1.f - 2.f * xx - 2.f * zz;
 
-        return Vector<3>(cx, atan2f(m31, m33), atan2f(m12, m22));
+        return {cx, atan2f(m31, m33), atan2f(m12, m22)};
     } else {
         const f32 m11 = 1.f - 2.f * yy - 2.f * zz;
         const f32 m21 = 2.f * x * y - 2.f * z * w;
 
-        return Vector<3>(cx, 0.f, atan2f(-m21, m11));
+        return {cx, 0.f, atan2f(-m21, m11)};
     }
 }
 
-inline Matrix<4, 4> CreatePerspectiveProjectionMatrix1(f32 w, f32 h, f32 n, f32 f) { 
+inline Matrix<4, 4> CreatePerspectiveProjectionMatrix1(f32 w, f32 h, f32 n, f32 f) {
     Matrix<4, 4> ret{};
     ret.at(0, 0) = 2.0f / w;
     ret.at(1, 1) = 2.0f / h;
@@ -348,8 +349,8 @@ inline Matrix<4, 4> CreateOrthoProjectionMatrix(f32 w, f32 h, f32 n, f32 f) {
     Matrix<4, 4> ret{};
     ret.at(0, 0) = 2.0f / w;
     ret.at(1, 1) = 2.0f / h;
-    ret.at(2,2) = -1.0f / (f - n);
-    ret.at(2,3) = -n / (f - n);
+    ret.at(2, 2) = -1.0f / (f - n);
+    ret.at(2, 3) = -n / (f - n);
     return ret;
 }
 

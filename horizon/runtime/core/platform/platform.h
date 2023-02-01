@@ -8,4 +8,7 @@
 
 #define USE_RIGHT_HAND_COORD true
 
-#define ENABLE_SHADER_DEBUG_MARKER
+#define ENABLE_SHADER_DEBUG_MARKER true
+
+// for incremental shader compile
+#define ENABLE_SHADER_CACHE true

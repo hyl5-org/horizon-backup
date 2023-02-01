@@ -2,7 +2,7 @@
  * \file   texture.h
  * \brief  
  * 
- * \author hanyanglu
+ * \author hylu
  * \date   January 2023
  *********************************************************************/
 

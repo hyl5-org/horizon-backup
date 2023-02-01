@@ -3,16 +3,18 @@
 #extension GL_EXT_nonuniform_qualifier : enable
 #endif
 
-CBUFFER(CameraParamsUb, UPDATE_FREQ_PER_FRAME, b0, binding = 0)
+CBUFFER(CameraParamsUb, UPDATE_FREQ_PER_FRAME)
 {
     DATA(float4x4, vp, None);
     DATA(float4x4, prev_vp, None);
     DATA(float4, camera_position, None);
 };
 
-PUSH_CONSTANT(DrawRootConstant, b1){
-    DATA(uint, mesh_id_offset, None);
-};
+// PUSH_CONSTANT(DrawRootConstant, b1){
+//     DATA(uint, mesh_id_offset, None);
+// };
+
+const uint mesh_id_offset; 
 
 STRUCT(InstanceParameter)
 {
@@ -22,7 +24,7 @@ STRUCT(InstanceParameter)
     DATA(uint, material_id, None);
 };
 
-RES(Buffer(InstanceParameter), decal_instance_parameter, UPDATE_FREQ_PER_FRAME, t3, binding = 1);
+RES(Buffer(InstanceParameter), decal_instance_parameter, UPDATE_FREQ_PER_FRAME);
 
 STRUCT(VSInput)
 {
@@ -48,7 +50,7 @@ STRUCT(VSOutput)
 
 VSOutput VS_MAIN( VSInput vsin, SV_InstanceID(uint) InstanceID, SV_VertexID(uint) vertex_id)
 {
-    INIT_MAIN;
+    
     VSOutput vsout;
     uint mesh_id;
 #ifdef VULKAN

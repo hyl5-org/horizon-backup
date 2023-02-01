@@ -25,3 +25,18 @@ float Dot(float4 x, float4 y) { return x.x * y.x + x.y * y.y + x.z * y.z + x.w *
 uint AlignUp (float a, float b) {
     return uint((a + (b - 1)) / b);
 }
+
+#define GreaterThan(A, B) ((A) > (B))
+#define GreaterThanEqual(A, B) ((A) >= (B))
+#define LessThan(A, B) ((A) < (B))
+#define LessThanEqual(A, B) ((A) <= (B))
+
+#define AllGreaterThan(X, Y) all(GreaterThan(X, Y))
+#define AllGreaterThanEqual(X, Y) all(GreaterThanEqual(X, Y))
+#define AllLessThan(X, Y) all(LessThan(X, Y))
+#define AllLessThanEqual(X, Y) all(LessThanEqual((X), (Y)))
+
+#define AnyGreaterThan(X, Y) any(GreaterThan(X, Y))
+#define AnyGreaterThanEqual(X, Y) any(GreaterThanEqual(X, Y))
+#define AnyLessThan(X, Y) any(LessThan(X, Y))
+#define AnyLessThanEqual(X, Y) any(LessThanEqual((X), (Y)))

@@ -5,7 +5,7 @@
 namespace Horizon::Backend {
 class Sampler {
   public:
-    Sampler() noexcept {};
+    Sampler() noexcept = default;
     virtual ~Sampler() noexcept = default;
 
     Sampler(const Sampler &rhs) noexcept = delete;

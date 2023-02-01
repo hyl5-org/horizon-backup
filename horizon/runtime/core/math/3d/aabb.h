@@ -1,9 +1,9 @@
 #pragma once
 
-#include "runtime/core/math/hmath.h"
 #include "runtime/core/utils/definations.h"
+#include "vector.hpp"
 
-namespace Horizon {
+namespace Horizon::math {
 
 class AABB {
   public:
@@ -16,8 +16,8 @@ class AABB {
     AABB &operator=(AABB &&rhs) noexcept = default;
 
   public:
-    math::Vector3f min;
-    math::Vector3f max;
+    Vector<3> min;
+    Vector<3> max;
 };
 
 } // namespace Horizon

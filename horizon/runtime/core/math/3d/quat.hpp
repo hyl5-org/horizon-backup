@@ -16,6 +16,8 @@
 
 // project headers
 #include "runtime/core/utils/definations.h"
+#include "runtime/core/container/container.h"
+#include "vector.hpp"
 
 #define QUATERNION_ACCESS(CHARACTER, INDEX)                                                                         \
     constexpr T &CHARACTER() { return e.at(INDEX); }
@@ -28,9 +30,9 @@ namespace Horizon::math {
 template<typename T = f32>
 class Quaternion {
   public:
-    constexpr Quaternion() noexcept {  }
+    constexpr Quaternion() noexcept = default; // TODO(hylu): unit quat
 
-    constexpr Quaternion(const T (&_e)[4]) noexcept {
+    constexpr Quaternion(const Container::FixedArray<T, 4> _e) noexcept {
         for (u32 i = 0; i < 4; i++) {
             e[i] = _e[i];
         }

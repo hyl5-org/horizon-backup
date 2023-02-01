@@ -6,7 +6,7 @@
  * \date   December 2022
  *********************************************************************/
 
-#include "Decal.h"
+#include "decal.h"
 
 // standard library
 
@@ -15,11 +15,12 @@
 
 //
 #include "runtime/function/rhi/texture.h"
+#include "runtime/core/io/file_system.h"
 
 namespace Horizon {
 
 Decal::Decal(const std::filesystem::path &path) noexcept : m_path(path) {
-    auto decal_material_desc = ReadFile(path.generic_string().c_str());
+    auto decal_material_desc = fs::read_asset(path.generic_string().c_str());
     /*nlohmann::json json_data = nlohmann::json::parse(decal_material_desc);
 
     decal_material = Memory::Alloc<Material>();

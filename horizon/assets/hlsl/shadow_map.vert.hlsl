@@ -1,10 +1,7 @@
+#include "include/common/descriptor.hlsl"
 #include "include/common/bindless.hlsl"
-#ifdef VULKAN
-#extension GL_EXT_nonuniform_qualifier : enable // how to hide this?
-//#extension GL_ARB_shader_draw_parameters : enable
-#endif
 
-CBUFFER(CameraParamsUb, UPDATE_FREQ_PER_FRAME, b0, binding = 0)
+CBUFFER(CameraParamsUb, UPDATE_FREQ_PER_FRAME)
 {
     DATA(float4x4, vp, None);
     DATA(float4x4, prev_vp, None);
@@ -22,13 +19,13 @@ STRUCT(InstanceParameter)
     DATA(uint, material_id, None);
 };
 
-RES(Buffer(InstanceParameter), instance_parameter, UPDATE_FREQ_PER_FRAME, t3, binding = 1);
+RES(Buffer(InstanceParameter), instance_parameter, UPDATE_FREQ_PER_FRAME);
 
 STRUCT(ShadowMapData){
     DATA(float4x4, shadow_map_view_projection, None);
 };
 
-RES(Buffer(ShadowMapData), shadow_map_data, UPDATE_FREQ_PER_FRAME, t4, binding = 2);
+RES(Buffer(ShadowMapData), shadow_map_data, UPDATE_FREQ_PER_FRAME);
 
 STRUCT(VSInput)
 {
@@ -46,7 +43,7 @@ STRUCT(VSInput)
 // 	DATA(float, packed[VERETX_LAYOUT_STRIDE], None);
 // };
 
-// RES(Buffer(PackedVsInput), vertex_buffers[], UPDATE_FREQ_BINDLESS, t3, binding = 2);
+// RES(Buffer(PackedVsInput), vertex_buffers[], UPDATE_FREQ_BINDLESS);
 
 STRUCT(VSOutput)
 {
@@ -65,7 +62,7 @@ STRUCT(VSOutput)
 
 VSOutput VS_MAIN( VSInput vsin, SV_InstanceID(uint) InstanceID, SV_VertexID(uint) vertex_id)
 {
-    INIT_MAIN;
+    
     VSOutput vsout;
     uint mesh_id;
 #ifdef VULKAN

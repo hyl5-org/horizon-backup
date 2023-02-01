@@ -22,9 +22,9 @@
 
 #include "runtime/function/resource/resource_manager/resource_manager.h"
 #include "runtime/function/resource/resources/mesh/mesh.h"
-#include "runtime/function/scene/camera/Camera.h"
+#include "runtime/function/scene/camera/camera.h"
 #include "runtime/function/scene/camera/camera_controller.h"
-#include "runtime/function/scene/light/Light.h"
+#include "runtime/function/scene/light/light.h"
 
 namespace Horizon {
 

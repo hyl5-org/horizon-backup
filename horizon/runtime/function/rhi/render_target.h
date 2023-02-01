@@ -13,7 +13,7 @@ class RenderTarget {
         height = render_target_create_info.height;
         rt_type = render_target_create_info.rt_type;
     };
-    virtual ~RenderTarget() noexcept {};
+    virtual ~RenderTarget() noexcept = default;
 
     RenderTarget(const RenderTarget &rhs) noexcept = delete;
     RenderTarget &operator=(const RenderTarget &rhs) noexcept = delete;
