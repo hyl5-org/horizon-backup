@@ -9,8 +9,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/horizon)
 set(SOLUTION_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-format-style='file';--extra-arg-before=-std=c++17;${CLANG_TIDY_ARGS}")
 
+# cpp tool chain
+set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-format-style='file';--extra-arg-before=-std=c++17;${CLANG_TIDY_ARGS}")
 set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE include-what-you-use)
 
 add_subdirectory(horizon/3rd_party)
