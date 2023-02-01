@@ -124,7 +124,7 @@ For explicit resource placement, hlsl registers and glsl bindings need to be dec
 To access a resource, the syntax Get(resource) is used.
 Texture and Buffer resources can be declared as arrays by appending the dimension to the identifier. For Metal, argument buffers are generated for an update frequency whenever a single resource is declared as an array:
 ```
-RES(Buffer(uint), myBuffers[2], UPDATE_FREQ_NONE, b0, binding=0);
+RES(Buffer<uint>, myBuffers[2], UPDATE_FREQ_NONE, b0, binding=0);
 ```
 If any such resource declaration is active in a shader, all resource declaring
 with the same update frequency get placed inside the argument buffer.

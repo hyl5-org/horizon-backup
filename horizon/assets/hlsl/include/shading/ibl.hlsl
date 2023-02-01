@@ -2,7 +2,7 @@
 #include "brdf_horizon.hlsl"
 #include "material_params_defination.hlsl"
 // float3 ComputeIBL(MaterialProperties mat,
-// 	float NoV, float3 N, float3 V, TexCube(float4) iemCubemap, TexCube(float4) pmremCubemap, Texture2D(float4)
+// 	float NoV, float3 N, float3 V, TextureCube<float4> iemCubemap, TextureCube<float4> pmremCubemap, Texture2D<float4>
 // environmentBRDF, SamplerState ibl_sampler)
 // {
 //     float3 albedo = mat.albedo;

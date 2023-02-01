@@ -26,7 +26,7 @@
 // {
 //     
 
-//     // uint2 _resolution = Get(resolution.xy) - uint2(1.0, 1.0);
+//     // uint2 _resolution = (resolution.xy) - uint2(1.0, 1.0);
 
 //     // if (thread_id.x>_resolution.x || thread_id.y>_resolution.y) {
 //     //     
@@ -35,12 +35,12 @@
 //     // float2 uv = float2(thread_id.xy) / float2(_resolution);
 
 
-//     // float depth = SampleTex2D(Get(depth_tex), default_sampler, uv).r;
-//     // float3 normal = SampleTex2D(Get(normal_tex), default_sampler, uv).xyz;
-//     // float3 albedo = LoadRWTex2D(Get(curr_color_tex), thread_id.xy + int2(1, 0)).xyz;
+//     // float depth = SampleTex2D((depth_tex), default_sampler, uv).r;
+//     // float3 normal = SampleTex2D((normal_tex), default_sampler, uv).xyz;
+//     // float3 albedo = LoadRWTex2D((curr_color_tex), thread_id.xy + int2(1, 0)).xyz;
     
-//     // float3 view_normal = (Get(camera_view) * float4(normal, 0.0)).xyz; // view space normal
-//     // float3 view_pos = ReconstructWorldPos(Get(camera_inv_projection), depth, uv);
+//     // float3 view_normal = ((camera_view) * float4(normal, 0.0)).xyz; // view space normal
+//     // float3 view_pos = ReconstructWorldPos((camera_inv_projection), depth, uv);
 //     // float3 view_dir = normalize(float3(0.0) - view_pos);
 //     // float3 reflect_dir = reflect(-view_dir, view_normal);
 
@@ -49,10 +49,10 @@
 //     //     ray_pos += step * step_length;
 //     //     float4 clip_pos = projection * float4(ray_pos, 1.0);
 //     //     clip_pos.xyz /= clip_pos.w;
-//     //     float2 screen_pos = (clip_pos.xy * 0.5 + 0.5) * Get(screen_resolution);
+//     //     float2 screen_pos = (clip_pos.xy * 0.5 + 0.5) * (screen_resolution);
 //     // }
 
-//     // Write2D(Get(ao_factor_tex), thread_id.xy, out_color);
+//     // Write2D((ao_factor_tex), thread_id.xy, out_color);
 
 //     
 // }

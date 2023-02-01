@@ -320,7 +320,7 @@ A_STATIC void FsrEasuConOffset(
  AU4 con2,
  AU4 con3){
 //------------------------------------------------------------------------------------------------------------------------------
-  // Get position of 'f'.
+  //  position of 'f'.
   AF2 pp=AF2(ip)*AF2_AU2(con0.xy)+AF2_AU2(con0.zw);
   AF2 fp=floor(pp);
   pp-=fp;

@@ -4,19 +4,19 @@
 #include "include/common/common_math.hlsl"
 #include "include/indirectcommand/indirect_command.hlsl"
 #include "include/geometry/geometry.hlsl"
-
+#include "include/common/descriptor.hlsl"
 #define ENABLE_CULL_BACKFACE			1
 #define ENABLE_CULL_FRUSTUM				1
 #define ENABLE_CULL_SMALL_PRIMITIVES	1
 
-RES(RBuffer(MeshInfo), mesh_infos, UPDATE_FREQ_PER_FRAME);
-RES(RWBuffer(uint), mesh_index_offsets, UPDATE_FREQ_PER_FRAME);
-RES(RWBuffer(uint), visible_meshes, UPDATE_FREQ_PER_FRAME);
+RES(RWStructuredBuffer(MeshInfo), mesh_infos, UPDATE_FREQ_PER_FRAME);
+RES(RWStructuredBuffer<uint>, mesh_index_offsets, UPDATE_FREQ_PER_FRAME);
+RES(RWStructuredBuffer<uint>, visible_meshes, UPDATE_FREQ_PER_FRAME);
 
-RES(Buffer(uint3), index_buffers[], UPDATE_FREQ_BINDLESS);
-RES(Buffer(uint3), compacted_index_buffer, UPDATE_FREQ_PER_FRAME); // compact rest triangle into new index buffer
+RES(StructuredBuffer<uint3>, index_buffers[], UPDATE_FREQ_BINDLESS);
+RES(StructuredBuffer<uint3>, compacted_index_buffer, UPDATE_FREQ_PER_FRAME); // compact rest triangle into new index buffer
 
-// uint GetMeshID(uint index_id) { return Get(mesh_id_list)[index_id]; }
+// uint GetMeshID(uint index_id) { return (mesh_id_list)[index_id]; }
 
 NUM_THREADS(WORK_GROUP_SIZE, 1, 1)
 void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupThreadID(uint3) lane_id) 
@@ -26,9 +26,9 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupThreadID(uint3) lane
     // uint index_id = thread_id.x;
     // uint mesh_id = GetMeshID(thread_id.x);
     // uint index_offset = GetIndexOffset(mesh_id, index_id);
-    // compacted_index_buffer[index_id] = Get(index_buffers)[mesh_id][index_offset];
+    // compacted_index_buffer[index_id] = (index_buffers)[mesh_id][index_offset];
 
-    // if (index_id > Get(mesh_index_offsets)[current_mesh_id]) {
+    // if (index_id > (mesh_index_offsets)[current_mesh_id]) {
     //     AtomicAdd(current_mesh_id, 1);
     // }
 

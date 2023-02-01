@@ -17,31 +17,31 @@ RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME);
 
 CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME)
 {
-    DATA(float4x4, camera_view, None);
-    DATA(float4x4, camera_projection, None);
-    DATA(float4x4, camera_view_projection, None);
-    DATA(float4x4, camera_inverse_view_projection, None);
-    DATA(uint2, resolution, None);
-    DATA(uint2, pad0, None);
-    DATA(float3, camera_pos, None);
-    DATA(uint, pad1, None);
-    DATA(float, ibl_intensity, None);
+    float4x4 camera_view;
+    float4x4 camera_projection;
+    float4x4 camera_view_projection;
+    float4x4 camera_inverse_view_projection;
+    uint2 resolution;
+    uint2 pad_0;
+    float3 camera_pos;
+    uint pad_1;
+    float ibl_intensity;
 };
 
 CBUFFER(LightCountUb, UPDATE_FREQ_PER_FRAME)
 {
-    DATA(uint, directional_light_count, None);
-    DATA(uint, local_light_count, None);
+    uint directional_light_count;
+    uint local_light_count;
 };
 
 CBUFFER(DirectionalLightDataUb, UPDATE_FREQ_PER_FRAME)
 {
-    DATA(LightParams, directional_light_data[MAX_DYNAMIC_LIGHT_COUNT], None);
+    LightParams  directional_light_data[MAX_DYNAMIC_LIGHT_COUNT];
 };
 
 CBUFFER(LocalLightDataUb, UPDATE_FREQ_PER_FRAME)
 {
-    DATA(LightParams, local_light_data[MAX_DYNAMIC_LIGHT_COUNT], None);
+    LightParams local_light_data[MAX_DYNAMIC_LIGHT_COUNT];
 };
 
 RES(RWTexture2D<float4>, out_color, UPDATE_FREQ_PER_FRAME);
@@ -50,28 +50,28 @@ RES(RWTexture2D<float4>, ao_tex, UPDATE_FREQ_PER_FRAME);
 
 CBUFFER(DiffuseIrradianceSH3, UPDATE_FREQ_PER_FRAME)
 {
-    DATA(float3, sh[9], None);
+    float3 sh[9];
 };
 
-RES(TexCube(float4), specular_map, UPDATE_FREQ_PER_FRAME);
-RES(Texture2D(float4), specular_brdf_lut, UPDATE_FREQ_PER_FRAME);
+RES(TextureCube<float4>, specular_map, UPDATE_FREQ_PER_FRAME);
+RES(Texture2D<float4>, specular_brdf_lut, UPDATE_FREQ_PER_FRAME);
 RES(SamplerState, ibl_sampler, UPDATE_FREQ_PER_FRAME);
 
 [numthreads(8, 8, 1)]
-void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupID(uint3) groupID) 
+void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, uint3 groupID: SV_GroupID) 
 {
     
-    uint2 _resolution = Get(resolution).xy - uint2(1.0, 1.0);
+    uint2 _resolution = resolution.xy - uint2(1.0, 1.0);
 
     if (thread_id.x>_resolution.x || thread_id.y>_resolution.y) {
         
     }
 
     float2 uv = float2(thread_id.xy) / float2(_resolution);
-    float4 gbuffer0 = SampleTex2D(Get(gbuffer0_tex), default_sampler, uv);
-    float4 gbuffer1 = SampleTex2D(Get(gbuffer1_tex), default_sampler, uv);
-    float4 gbuffer2 = SampleTex2D(Get(gbuffer2_tex), default_sampler, uv);
-    float4 gbuffer3 = SampleTex2D(Get(gbuffer3_tex), default_sampler, uv);
+    float4 gbuffer0 = gbuffer0_tex.SampleLevel(default_sampler, uv, 0);
+    float4 gbuffer1 = gbuffer1_tex.SampleLevel(default_sampler, uv, 0);
+    float4 gbuffer2 = gbuffer2_tex.SampleLevel(default_sampler, uv, 0);
+    float4 gbuffer3 = gbuffer3_tex.SampleLevel(default_sampler, uv, 0);
     
     MaterialProperties mat;
     mat.material_id = groupID.z;
@@ -89,28 +89,28 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupID(uint3) groupID)
     mat.roughness2 = Pow2(roughness);
     mat.f0 = lerp(float3(0.04, 0.04, 0.04), mat.albedo, mat.metallic);
 
-    float3 world_pos = ReconstructWorldPos(Get(camera_inverse_view_projection),SampleTex2D(Get(depth_tex), default_sampler, uv).r, uv);
+    float3 world_pos = ReconstructWorldPos((camera_inverse_view_projection),depth_tex.SampleLevel(default_sampler, uv, 0).r, uv);
     float3 n =  normalize(gbuffer0.xyz);
-    float3 v = -normalize(world_pos - Get(camera_pos).xyz);
+    float3 v = -normalize(world_pos - (camera_pos).xyz);
     float NoV = saturate(dot(n, v));
     float4 radiance = float4(0.0, 0.0, 0.0, 0.0);
 
     // direct lighting
-    for(uint i = 0; i < Get(directional_light_count); i++) {
-        radiance += RadianceDirectionalLight(mat, Get(directional_light_data)[i], n, v, world_pos);
+    for(uint i = 0; i < (directional_light_count); i++) {
+        radiance += RadianceDirectionalLight(mat, (directional_light_data)[i], n, v, world_pos);
     }
 
-    for(uint i = 0; i < Get(local_light_count); i++) {
-        radiance += RadianceLocalLight(mat, Get(local_light_data)[i], n, v, world_pos);
+    for(uint i = 0; i < (local_light_count); i++) {
+        radiance += RadianceLocalLight(mat, (local_light_data)[i], n, v, world_pos);
     }
   
     // indirect light
     float3 reflect_dir = normalize(2.0 * dot(n, v) * n - v);
-    float3 specular = SampleLvlTexCube(Get(specular_map), ibl_sampler, reflect_dir, mat.roughness * 8.0).xyz; // 256x256 at miplevel0
+    float3 specular = specular_map.SampleLevel(ibl_sampler, reflect_dir, mat.roughness * 8.0);
     float2 ibl_uv = float2(mat.roughness, NoV);
-    float2 env = SampleTex2D(Get(specular_brdf_lut), ibl_sampler, ibl_uv).xy;
-    float3 ambient = IBL(Get(sh), specular, env, n, NoV, mat) * LoadRWTex2D(Get(ao_tex), thread_id.xy).r * Get(ibl_intensity).x;
+    float2 env = specular_brdf_lut.SampleLevel(ibl_sampler, ibl_uv, 0).xy;
+    float3 ambient = IBL((sh), specular, env, n, NoV, mat) * ao_tex[thread_id.xy].r * (ibl_intensity).x;
     radiance.xyz += ambient;
-    Write2D(Get(out_color), thread_id.xy, radiance);
+    out_color[thread_id.x] = radiance;
     
 }
