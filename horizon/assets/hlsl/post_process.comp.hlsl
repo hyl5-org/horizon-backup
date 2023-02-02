@@ -12,8 +12,6 @@ CBUFFER(exposure_constants, UPDATE_FREQ_PER_FRAME)
 [numthreads(8, 8, 1)]
 void CS_MAIN( uint3 thread_id: SV_DispatchThreadID) 
 {
-    
-    
     float4 color  = color_image[thread_id.xy];
 
     color.xyz *= exposure_ev100__.x;
@@ -23,7 +21,5 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID)
     color.xyz = GammaCorrection(color.xyz);
 
     out_color_image[thread_id.xy] =  color;
-
-    
 }
 

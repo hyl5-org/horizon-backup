@@ -15,12 +15,12 @@ RES(Texture2D<float4>, depth_tex, UPDATE_FREQ_PER_FRAME);
 
 RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME);
 
-CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME)
-{
+CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME) {
     float4x4 camera_view;
     float4x4 camera_projection;
     float4x4 camera_view_projection;
     float4x4 camera_inverse_view_projection;
+    float4x4 camera_prev_view_projection;
     uint2 resolution;
     uint2 pad_0;
     float3 camera_pos;
@@ -64,7 +64,7 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, uint3 groupID: SV_GroupID)
     uint2 _resolution = resolution.xy - uint2(1.0, 1.0);
 
     if (thread_id.x>_resolution.x || thread_id.y>_resolution.y) {
-        
+        return;
     }
 
     float2 uv = float2(thread_id.xy) / float2(_resolution);
@@ -112,5 +112,4 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, uint3 groupID: SV_GroupID)
     float3 ambient = IBL((sh), specular, env, n, NoV, mat) * ao_tex[thread_id.xy].r * (ibl_intensity).x;
     radiance.xyz += ambient;
     out_color[thread_id.x] = radiance;
-    
 }

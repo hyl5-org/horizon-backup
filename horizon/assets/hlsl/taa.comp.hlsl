@@ -5,16 +5,16 @@ RES(RWTexture2D<float4>, curr_color_tex, UPDATE_FREQ_PER_FRAME);
 RES(RWTexture2D<float2>, mv_tex, UPDATE_FREQ_PER_FRAME);
 RES(RWTexture2D<float4>, out_color_tex, UPDATE_FREQ_PER_FRAME);
 
-CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME)
-{
+CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME) {
     float4x4 camera_view;
     float4x4 camera_projection;
     float4x4 camera_view_projection;
     float4x4 camera_inverse_view_projection;
+    float4x4 camera_prev_view_projection;
     uint2 resolution;
-    uint2 pad0;
+    uint2 pad_0;
     float3 camera_pos;
-    uint pad1;
+    uint pad_1;
     float ibl_intensity;
 };
 
@@ -47,6 +47,5 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID)
     float4 final_color = float4((1.0 - w) * prev_color + w * curr_color, 1.0);
 
     out_color_tex[thread_id.x] = final_color;
-
 }
 

@@ -100,7 +100,7 @@ void Mesh::ProcessMaterials(const aiScene *scene) {
             std::filesystem::path abs_path = m_path.parent_path();
             abs_path /= temp_path.C_Str();
             materials[i]->material_textures.emplace(MaterialTextureType::BASE_COLOR, abs_path);
-            materials[i]->material_params.param_bitmask |= HAS_BASE_COLOR;
+            materials[i]->material_params.param_bitmask |= HAS_BASE_COLOR_TEX;
         }
         // normal
         for (uint32_t t = 0; t < scene->mMaterials[i]->GetTextureCount(aiTextureType::aiTextureType_NORMALS); t++) {
@@ -109,7 +109,7 @@ void Mesh::ProcessMaterials(const aiScene *scene) {
             std::filesystem::path abs_path = m_path.parent_path();
             abs_path /= temp_path.C_Str();
             materials[i]->material_textures.emplace(MaterialTextureType::NORMAL, abs_path);
-            materials[i]->material_params.param_bitmask |= HAS_NORMAL;
+            materials[i]->material_params.param_bitmask |= HAS_NORMAL_TEX;
         }
         // metallic roughness
         for (uint32_t t = 0; t < scene->mMaterials[i]->GetTextureCount(aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS);
@@ -119,7 +119,7 @@ void Mesh::ProcessMaterials(const aiScene *scene) {
             std::filesystem::path abs_path = m_path.parent_path();
             abs_path /= temp_path.C_Str();
             materials[i]->material_textures.emplace(MaterialTextureType::METALLIC_ROUGHTNESS, abs_path);
-            materials[i]->material_params.param_bitmask |= HAS_METALLIC_ROUGHNESS;
+            materials[i]->material_params.param_bitmask |= HAS_METALLIC_ROUGHNESS_TEX;
         }
 
         for (uint32_t t = 0; t < scene->mMaterials[i]->GetTextureCount(aiTextureType::aiTextureType_EMISSIVE); t++) {
@@ -128,7 +128,7 @@ void Mesh::ProcessMaterials(const aiScene *scene) {
             std::filesystem::path abs_path = m_path.parent_path();
             abs_path /= temp_path.C_Str();
             materials[i]->material_textures.emplace(MaterialTextureType::EMISSIVE, abs_path);
-            materials[i]->material_params.param_bitmask |= HAS_EMISSIVE;
+            materials[i]->material_params.param_bitmask |= HAS_EMISSIVE_TEX;
         }
     }
 

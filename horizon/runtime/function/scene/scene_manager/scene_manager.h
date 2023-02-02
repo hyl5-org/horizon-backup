@@ -59,11 +59,11 @@ struct MaterialDesc {
     u32 subsurface_scattering_texture_index;
     u32 param_bitmask;
     u32 blend_state;
-    math::Vector3f base_color;
+    math::Vector3f base_color = {1.0f, 1.0f, 1.0f};
     f32 pad1;
     math::Vector3f emissive;
     f32 pad2;
-    math::Vector2f metallic_roughness;
+    math::Vector2f metallic_roughness = {0.0f, 1.0f};
     math::Vector2f pad3;
 };
 

@@ -300,22 +300,22 @@ inline Vector<3, f32> ToEular(const Quaternion<f32> &q) {
     const f32 yy = y * y;
     const f32 zz = z * z;
 
-    const f32 m31 = 2.f * x * z + 2.f * y * w;
-    const f32 m32 = 2.f * y * z - 2.f * x * w;
-    const f32 m33 = 1.f - 2.f * xx - 2.f * yy;
+    const f32 m31 = 2.0f * x * z + 2.0f * y * w;
+    const f32 m32 = 2.0f * y * z - 2.0f * x * w;
+    const f32 m33 = 1.0f - 2.0f * xx - 2.0f * yy;
 
     const f32 cy = sqrtf(m33 * m33 + m31 * m31);
     const f32 cx = atan2f(-m32, cy);
-    if (cy > 16.f * FLT_EPSILON) {
-        const f32 m12 = 2.f * x * y + 2.f * z * w;
-        const f32 m22 = 1.f - 2.f * xx - 2.f * zz;
+    if (cy > 16.0f * FLT_EPSILON) {
+        const f32 m12 = 2.0f * x * y + 2.0f * z * w;
+        const f32 m22 = 1.0f - 2.0f * xx - 2.0f * zz;
 
         return {cx, atan2f(m31, m33), atan2f(m12, m22)};
     } else {
-        const f32 m11 = 1.f - 2.f * yy - 2.f * zz;
-        const f32 m21 = 2.f * x * y - 2.f * z * w;
+        const f32 m11 = 1.0f - 2.0f * yy - 2.0f * zz;
+        const f32 m21 = 2.0f * x * y - 2.0f * z * w;
 
-        return {cx, 0.f, atan2f(-m21, m11)};
+        return {cx, 0.0f, atan2f(-m21, m11)};
     }
 }
 
@@ -397,17 +397,17 @@ inline Matrix<4, 4> CreateRotationFromQuaternion(const Quaternion<> &q) {
     f32 qw = q.w();
 
     Matrix<4, 4> M;
-    M.at(0, 0) = 1.f - 2.f * qyy - 2.f * qzz;
-    M.at(0, 1) = 2.f * qx * qy + 2.f * qz * qw;
-    M.at(0, 2) = 2.f * qx * qz - 2.f * qy * qw;
+    M.at(0, 0) = 1.f - 2.0f * qyy - 2.0f * qzz;
+    M.at(0, 1) = 2.0f * qx * qy + 2.0f * qz * qw;
+    M.at(0, 2) = 2.0f * qx * qz - 2.0f * qy * qw;
     M.at(0, 3) = 0.f;
-    M.at(1, 0) = 2.f * qx * qy - 2.f * qz * qw;
-    M.at(1, 1) = 1.f - 2.f * qxx - 2.f * qzz;
-    M.at(1, 2) = 2.f * qy * qz + 2.f * qx * qw;
+    M.at(1, 0) = 2.0f * qx * qy - 2.0f * qz * qw;
+    M.at(1, 1) = 1.f - 2.0f * qxx - 2.0f * qzz;
+    M.at(1, 2) = 2.0f * qy * qz + 2.0f * qx * qw;
     M.at(1, 3) = 0.f;
-    M.at(2, 0) = 2.f * qx * qz + 2.f * qy * qw;
-    M.at(2, 1) = 2.f * qy * qz - 2.f * qx * qw;
-    M.at(2, 2) = 1.f - 2.f * qxx - 2.f * qyy;
+    M.at(2, 0) = 2.0f * qx * qz + 2.0f * qy * qw;
+    M.at(2, 1) = 2.0f * qy * qz - 2.0f * qx * qw;
+    M.at(2, 2) = 1.f - 2.0f * qxx - 2.0f * qyy;
     M.at(2, 3) = 0.f;
     M.at(3, 0) = 0.f;
     M.at(3, 1) = 0.f;

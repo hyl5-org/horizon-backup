@@ -1,15 +1,18 @@
 // compact a big index buffer of visible mesh to save cpu bind index buffer
-// counter to https://github.com/ConfettiFX/The-Forge/blob/06dcb5cea31e30f9509309b1d7557167397a71a4/Examples_3/Unit_Tests/src/15a_VisibilityBufferOIT/Shaders/FSL/triangle_filtering.comp.fsl
+// triangle culling cull single triangle to reduce vertex count into gpu.
+// reduced IA, VS, stage
+
 #include "include/platform/platform.hlsl"
 #include "include/common/common_math.hlsl"
 #include "include/indirectcommand/indirect_command.hlsl"
 #include "include/geometry/geometry.hlsl"
 #include "include/common/descriptor.hlsl"
-#define ENABLE_CULL_BACKFACE			1
-#define ENABLE_CULL_FRUSTUM				1
-#define ENABLE_CULL_SMALL_PRIMITIVES	1
 
-RES(RWStructuredBuffer(MeshInfo), mesh_infos, UPDATE_FREQ_PER_FRAME);
+#define ENABLE_CULL_BACKFACE			true
+#define ENABLE_CULL_FRUSTUM				true
+#define ENABLE_CULL_SMALL_PRIMITIVES	true
+
+RES(RWStructuredBuffer<MeshInfo>, mesh_infos, UPDATE_FREQ_PER_FRAME);
 RES(RWStructuredBuffer<uint>, mesh_index_offsets, UPDATE_FREQ_PER_FRAME);
 RES(RWStructuredBuffer<uint>, visible_meshes, UPDATE_FREQ_PER_FRAME);
 
@@ -18,8 +21,8 @@ RES(StructuredBuffer<uint3>, compacted_index_buffer, UPDATE_FREQ_PER_FRAME); // 
 
 // uint GetMeshID(uint index_id) { return (mesh_id_list)[index_id]; }
 
-NUM_THREADS(WORK_GROUP_SIZE, 1, 1)
-void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupThreadID(uint3) lane_id) 
+[numthreads(WORK_GROUP_SIZE, 1, 1)]
+void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, uint3 lane_id : SV_GroupThreadID) 
 {
     
 
@@ -35,5 +38,3 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupThreadID(uint3) lane
     
 }
 
-// triangle culling cull single triangle to reduce vertex count into gpu.
-reduced IA, VS, stage

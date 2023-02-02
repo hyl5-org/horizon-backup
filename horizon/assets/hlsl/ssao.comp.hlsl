@@ -2,7 +2,6 @@
 #include "include/translation/translation.hlsl"
 #include "include/common/common_math.hlsl"
 #include "include/common/noise.hlsl"
-
 #define SSAO_SAMPLE_COUNT 32
 #define SSAO_SAMPLE_RADIUS 1.0
 #define SSAO_BIAS 0.025
@@ -13,12 +12,12 @@ RES(Texture2D<float2>, ssao_noise_tex, UPDATE_FREQ_PER_FRAME);
 RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME);
 RES(RWTexture2D<float4>, ao_factor_tex, UPDATE_FREQ_PER_FRAME);
 
-CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME)
-{
+CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME) {
     float4x4 camera_view;
     float4x4 camera_projection;
     float4x4 camera_view_projection;
     float4x4 camera_inverse_view_projection;
+    float4x4 camera_prev_view_projection;
     uint2 resolution;
     uint2 pad_0;
     float3 camera_pos;

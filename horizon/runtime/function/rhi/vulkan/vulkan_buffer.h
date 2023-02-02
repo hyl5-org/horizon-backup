@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vk_mem_alloc.h>
-
 #include "runtime/core/utils/definations.h"
 #include "runtime/function/rhi/buffer.h"
 #include "runtime/function/rhi/vulkan/vulkan_utils.h"

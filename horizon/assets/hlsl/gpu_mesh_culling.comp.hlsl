@@ -3,16 +3,18 @@
 #include "include/indirectcommand/indirect_command.hlsl"
 #include "include/translation/translation.hlsl"
 #include "include/common/descriptor.hlsl"
+
 RES(RWStructuredBuffer<uint>, draw_count, UPDATE_FREQ_PER_FRAME);
-RES(RWStructuredBuffer(DrawIndexedInstancedCommand), indirect_draw_command, UPDATE_FREQ_PER_FRAME);
-RES(RWStructuredBuffer(MeshInfo), mesh_infos, UPDATE_FREQ_PER_FRAME);
+RES(RWStructuredBuffer<DrawIndexedInstancedCommand>, indirect_draw_command, UPDATE_FREQ_PER_FRAME);
+RES(RWStructuredBuffer<MeshInfo>, mesh_infos, UPDATE_FREQ_PER_FRAME);
 RES(RWStructuredBuffer<uint>, mesh_index_offsets, UPDATE_FREQ_PER_FRAME);
 RES(RWStructuredBuffer<uint>, visible_meshes, UPDATE_FREQ_PER_FRAME);
 RES(RWStructuredBuffer<uint3>, compact_index_buffer_dispatch_command, UPDATE_FREQ_PER_FRAME);
+
 CBUFFER(FrustumCullingConstants, UPDATE_FREQ_PER_FRAME)
 {
-    DATA(FrustumPlanes, camera_frustum_planes, None);
-    DATA(uint, mesh_count, None);
+    FrustumPlanes camera_frustum_planes;
+    uint mesh_count;
 };
 
 
@@ -35,11 +37,9 @@ bool FrustumCull(ExpandedAABB expanded_aabb, FrustumPlanes frustum_planes) {
 }
 
 // each thread a mesh
-NUM_THREADS(WORK_GROUP_SIZE, 1, 1)
-void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupThreadID(uint3) lane_id) 
+[numthreads(WORK_GROUP_SIZE, 1, 1)]
+void CS_MAIN( uint3 thread_id : SV_DispatchThreadID, uint3 lane_id : SV_GroupThreadID) 
 {
-    
-
     if (thread_id.x > mesh_count) {
         return;
     }
@@ -65,8 +65,8 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, SV_GroupThreadID(uint3) lane
 
     if (lane_id.x == 0) {
         uint summed_index_count = WaveActiveSum((mesh_infos)[mesh_id].index_count);
-        AtomicAdd((draw_count)[0], visible_mesh_count, global_draw_offset);
-        AtomicAdd((compact_index_buffer_dispatch_command)[0].x, summed_index_count, global_index_offset); // slightly larger than the actual index count
+        InterlockedAdd(draw_count[0], visible_mesh_count, global_draw_offset);
+        InterlockedAdd(compact_index_buffer_dispatch_command[0].x, summed_index_count, global_index_offset);// slightly larger than the actual index count
     }
     
     if (!culled) {

@@ -225,7 +225,8 @@ void VulkanDescriptorSetAllocator::CreateBindlessDescriptorPool() {
 
 void VulkanDescriptorSetAllocator::ResetDescriptorPool() {
     for (auto &set : allocated_sets) {
-        delete set;
+        if(set)
+            delete set;
     }
     allocated_sets.clear();
     if (m_temp_descriptor_pool)

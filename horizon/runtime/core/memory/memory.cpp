@@ -25,7 +25,9 @@ void initialize() {
 }
 
 void destroy() { 
-    delete global_memory_resource; 
+    if (global_memory_resource) {
+        delete global_memory_resource; 
+    }
 }
 
 } // namespace Horizon::Memory

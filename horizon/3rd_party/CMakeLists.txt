@@ -46,7 +46,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog spdlog::spdlog_heade
 # vma
 find_package(unofficial-vulkan-memory-allocator REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator)
-
 # d3dma
 # find_package(d3d12-memory-allocator REQUIRED)
 # target_link_libraries(${PROJECT_NAME} PUBLIC unofficial::d3d12-memory-allocator)

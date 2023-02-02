@@ -9,6 +9,7 @@
 #include "include/shading/lighting.hlsl"
 #include "include/shading/material_params_defination.hlsl"
 #include "include/translation/translation.hlsl"
+#include "resource.hlsl"
 // per material resources TODO: register for dx12
 
 
@@ -31,19 +32,7 @@ RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME);
 
 RES(Texture2D<float>, depth_tex, UPDATE_FREQ_PER_FRAME);
 
-CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME)
-{
-    float4x4 camera_view;
-    float4x4 camera_projection;
-    float4x4 camera_view_projection;
-    float4x4 camera_inverse_view_projection;
-    // TODO(hylu): prev_vp
-    uint2 resolution;
-    uint2 pad_0;
-    float3 camera_pos;
-    uint pad_1;
-    float ibl_intensity;
-};
+DECLARE_SCENE_CONSTANT
 
 // PUSH_CONSTANT(ShadingModeID, b0)
 // {
@@ -67,7 +56,6 @@ struct VSInput
 	float3 tangent: TANGENT;
 };
 
-
 struct VSOutput
 {
 	float4 position: SV_Position;
@@ -76,9 +64,7 @@ struct VSOutput
 	float2 uv: TEXCOORD0;
 	float3 tangent: TANGENT;
     nointerpolation uint instance_id;
-#ifdef VULKAN
     nointerpolation uint material_id;
-#endif
     float4 curr_pos;
     float4 prev_pos;
 };
@@ -98,9 +84,7 @@ VSOutput VS_MAIN( VSInput vsin, uint instance_id : SV_InstanceID, uint vertex_id
     
     VSOutput vsout;
     uint mesh_id;
-#ifdef VULKAN
     mesh_id = gl_DrawID;
-#endif
     mesh_id += (mesh_id_offset);
     float4x4 decal_to_world = decal_instance_parameter[instance_id].decal_to_world;
     float4x4 model = decal_instance_parameter[instance_id].model;
@@ -110,9 +94,6 @@ VSOutput VS_MAIN( VSInput vsin, uint instance_id : SV_InstanceID, uint vertex_id
     vsout.material_id = decal_instance_parameter[instance_id].material_id;
     return vsout;
 }
-
-
-
 
 PSOutput PS_MAIN(VSOutput vsout, uint tri_id : SV_PrimitiveID) 
 {
@@ -140,10 +121,10 @@ PSOutput PS_MAIN(VSOutput vsout, uint tri_id : SV_PrimitiveID)
     // MaterialDescription material = (decal_material_descriptions)[0][material_id];
     // uint param_bitmask = material.param_bitmask;
 
-    // // uint has_metallic_roughness = param_bitmask & HAS_METALLIC_ROUGHNESS;
-    // // uint has_normal = param_bitmask & HAS_NORMAL;
-    // // uint has_base_color = param_bitmask & HAS_BASE_COLOR;
-    // // uint has_emissive = param_bitmask & HAS_EMISSIVE;
+    // // uint has_metallic_roughness = param_bitmask & HAS_METALLIC_ROUGHNESS_TEX;
+    // // uint has_normal = param_bitmask & HAS_NORMAL_TEX;
+    // // uint has_base_color = param_bitmask & HAS_BASE_COLOR_TEX;
+    // // uint has_emissive = param_bitmask & HAS_EMISSIVE_TEX;
 
     // float3 albedo =
     //     pow(SampleTex2D((decal_material_textures)[material.base_color_texture_index], default_sampler, decal_tc).xyz,

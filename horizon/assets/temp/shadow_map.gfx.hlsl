@@ -118,7 +118,7 @@
 //     // vsout.material_id = (instance_parameter)[mesh_id].material_id;
 //     // vsout.prev_pos = prev_vp * model * float4(vsin.position, 1.0); // old
 //     // vsout.curr_pos = vp * model * float4(vsin.position, 1.0); // new
-//     RETURN(vsout);
+//     return vsout;
 // }
 
 
@@ -132,10 +132,10 @@
 //     MaterialDescription material = (material_descriptions)[0][material_id];
 //     uint param_bitmask = material.param_bitmask;
 
-//     uint has_metallic_roughness = param_bitmask & HAS_METALLIC_ROUGHNESS;
-//     uint has_normal = param_bitmask & HAS_NORMAL;
-//     uint has_base_color = param_bitmask & HAS_BASE_COLOR;
-//     uint has_emissive = param_bitmask & HAS_EMISSIVE;
+//     uint has_metallic_roughness = param_bitmask & HAS_METALLIC_ROUGHNESS_TEX;
+//     uint has_normal = param_bitmask & HAS_NORMAL_TEX;
+//     uint has_base_color = param_bitmask & HAS_BASE_COLOR_TEX;
+//     uint has_emissive = param_bitmask & HAS_EMISSIVE_TEX;
 
 //     float3 albedo =
 //         has_base_color != 0

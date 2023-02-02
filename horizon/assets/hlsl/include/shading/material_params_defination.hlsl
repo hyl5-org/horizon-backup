@@ -1,8 +1,8 @@
-#define HAS_BASE_COLOR 0x01
-#define HAS_NORMAL 0x10
-#define HAS_METALLIC_ROUGHNESS 0x100
-#define HAS_EMISSIVE 0x1000
-#define HAS_ALPHA 0x10000
+#define HAS_BASE_COLOR_TEX 0x01
+#define HAS_NORMAL_TEX 0x10
+#define HAS_METALLIC_ROUGHNESS_TEX 0x100
+#define HAS_EMISSIVE_TEX 0x1000
+#define HAS_ALPHA_TEX 0x10000
 
 struct MaterialProperties {
     float3 albedo;

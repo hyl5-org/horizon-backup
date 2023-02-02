@@ -50,13 +50,13 @@ Decal::Decal(const std::filesystem::path &path) noexcept : m_path(path) {
             std::filesystem::path bc_path = path.parent_path() / tex.value();
             decal_material->material_textures[MaterialTextureType::BASE_COLOR].texture_data_desc =
                 TextureLoader::Load(bc_path.string().c_str());
-            decal_material->material_params.param_bitmask |= HAS_BASE_COLOR;
+            decal_material->material_params.param_bitmask |= HAS_BASE_COLOR_TEX;
 
         } else if (tex.key() == "normal") {
             std::filesystem::path normal_path = path.parent_path() / tex.value();
             decal_material->material_textures[MaterialTextureType::NORMAL].texture_data_desc =
                 TextureLoader::Load(normal_path.string().c_str());
-            decal_material->material_params.param_bitmask |= HAS_NORMAL;
+            decal_material->material_params.param_bitmask |= HAS_NORMAL_TEX;
         }
     }*/
 }

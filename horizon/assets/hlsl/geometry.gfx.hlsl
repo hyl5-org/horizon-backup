@@ -5,18 +5,15 @@
 #include "include/shading/lighting.hlsl"
 #include "include/shading/material_params_defination.hlsl"
 #include "include/common/descriptor.hlsl"
-#ifdef VULKAN
-#extension GL_EXT_nonuniform_qualifier : enable
-#endif
 
 RES(Texture2D<float4>, material_textures[], UPDATE_FREQ_BINDLESS);
-RES(StructuredBuffer(MaterialDescription), material_descriptions[], UPDATE_FREQ_PER_FRAME);
+RES(StructuredBuffer<MaterialDescription>, material_descriptions[], UPDATE_FREQ_PER_FRAME);
 
 RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME);
 
 CBUFFER(TAAOffsets, UPDATE_FREQ_PER_FRAME)
 {
-    DATA(float4, taa_prev_curr_offset, None);
+    float4 taa_prev_curr_offset;
 };
 
 // PUSH_CONSTANT(ShadingModeID, b0)
@@ -35,10 +32,28 @@ struct InstanceParameter
     uint material_id;
 };
 
-RES(StructuredBuffer(InstanceParameter), instance_parameter, UPDATE_FREQ_PER_FRAME);
-PUSH_CONSTANT(DrawRootConstant, b1){
-    DATA(uint, mesh_id_offset, None);
+RES(StructuredBuffer<InstanceParameter>, instance_parameter, UPDATE_FREQ_PER_FRAME);
+
+CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME) {
+    float4x4 camera_view;
+    float4x4 camera_projection;
+    float4x4 camera_view_projection;
+    float4x4 camera_inverse_view_projection;
+    float4x4 camera_prev_view_projection;
+    uint2 resolution;
+    uint2 pad_0;
+    float3 camera_pos;
+    uint pad_1;
+    float ibl_intensity;
 };
+
+// PUSH_CONSTANT(DrawRootConstant, b1){
+//     DATA(uint, mesh_id_offset, None);
+// };
+
+const uint mesh_id_offset;
+const uint draw_id;
+
 struct VSInput
 {
 	float3 position: SV_Position;
@@ -57,53 +72,6 @@ struct VSInput
 
 // RES(StructuredBuffer(PackedVsInput), vertex_buffers[], UPDATE_FREQ_BINDLESS);
 
-STRUCT(VSOutput)
-{
-	DATA(float4, position, SV_Position);
-    DATA(float3, world_pos, POSITION);
-	DATA(float3, normal, NORMAL);
-	DATA(float2, uv, TEXCOORD0);
-	DATA(float3, tangent, TANGENT);
-    DATA(FLAT(uint), instance_id, None);
-#ifdef VULKAN
-    DATA(FLAT(uint), material_id, None);
-#endif
-    DATA(float4, curr_pos, None);
-    DATA(float4, prev_pos, None);
-};
-
-VSOutput VS_MAIN( VSInput vsin, uint instance_id : SV_InstanceID, uint vertex_id: SV_VertexID)
-{
-    
-    VSOutput vsout;
-    uint mesh_id;
-#ifdef VULKAN
-    mesh_id = gl_DrawID;
-#endif
-    mesh_id += (mesh_id_offset);
-    float4x4 model = (instance_parameter)[mesh_id].model_matrix;
-
-    // float vbp[VERETX_LAYOUT_STRIDE] = (vertex_buffers)[0][mesh_id + vertex_id].packed;
-    // vsin.position = GetVertexPositionFromPackedVertexBuffer(vbp);
-    // vsin.normal = GetVertexNormalFromPackedVertexBuffer(vbp);
-    // vsin.uv0 = GetVertexUv0FromPackedVertexBuffer(vbp);
-    // vsin.uv1 = GetVertexUv1FromPackedVertexBuffer(vbp);
-    // vsin.tangent = GetVertexTangentFromPackedVertexBuffer(vbp);
-    
-    vsout.position = vp * model * float4(vsin.position, 1.0);
-    vsout.world_pos = (model * float4(vsin.position, 1.0)).xyz;
-    //transpose(inverse(model)
-    vsout.normal = normalize((model * float4(vsin.normal, 0.0)).xyz);
-    vsout.uv = vsin.uv0;
-    vsout.tangent = normalize((model * float4(vsin.tangent, 0.0)).xyz);
-    vsout.instance_id = InstanceID;
-    vsout.material_id = (instance_parameter)[mesh_id].material_id;
-    vsout.prev_pos = prev_vp * model * float4(vsin.position, 1.0); // old
-    vsout.curr_pos = vp * model * float4(vsin.position, 1.0); // new
-    RETURN(vsout);
-}
-
-
 struct VSOutput
 {
 	float4 position: SV_Position;
@@ -112,13 +80,10 @@ struct VSOutput
 	float2 uv: TEXCOORD0;
 	float3 tangent: TANGENT;
     nointerpolation uint instance_id;
-#ifdef VULKAN
     nointerpolation uint material_id;
-#endif
     float4 curr_pos;
     float4 prev_pos;
 };
-
 
 struct PSOutput 
 {
@@ -130,63 +95,89 @@ struct PSOutput
     //uint2 vbuffer0, SV_Target0;
 };
 
-PSOutput PS_MAIN(VSOutput vsout, SV_PrimitiveID(uint) tri_id) 
+VSOutput VS_MAIN( VSInput vsin, uint instance_id : SV_InstanceID, uint vertex_id: SV_VertexID)
 {
     
+    VSOutput vsout;
+    uint mesh_id;
+    mesh_id = draw_id;
+    mesh_id += mesh_id_offset;
+    float4x4 model = instance_parameter[mesh_id].model_matrix;
+
+    // float vbp[VERETX_LAYOUT_STRIDE] = (vertex_buffers)[0][mesh_id + vertex_id].packed;
+    // vsin.position = GetVertexPositionFromPackedVertexBuffer(vbp);
+    // vsin.normal = GetVertexNormalFromPackedVertexBuffer(vbp);
+    // vsin.uv0 = GetVertexUv0FromPackedVertexBuffer(vbp);
+    // vsin.uv1 = GetVertexUv1FromPackedVertexBuffer(vbp);
+    // vsin.tangent = GetVertexTangentFromPackedVertexBuffer(vbp);
+    
+    vsout.position = mul(camera_view_projection, mul(model, float4(vsin.position, 1.0)));
+    vsout.world_pos = mul(model, float4(vsin.position, 1.0)).xyz;
+    //transpose(inverse(model)
+    vsout.normal = normalize(mul(model, float4(vsin.normal, 0.0)).xyz);
+    vsout.uv = vsin.uv0;
+    vsout.tangent = normalize(mul(model, float4(vsin.tangent, 0.0)).xyz);
+    vsout.instance_id = instance_id;
+    vsout.material_id = instance_parameter[mesh_id].material_id;
+    vsout.prev_pos = mul(camera_prev_view_projection, mul(model, float4(vsin.position, 1.0))); // old
+    vsout.curr_pos = mul(camera_view_projection, mul(model, float4(vsin.position, 1.0))); // new
+    return vsout;
+}
+
+PSOutput PS_MAIN(VSOutput vsout, uint tri_id : SV_PrimitiveID) 
+{
     PSOutput psout;
 
-    uint material_id = vsout.material_id;
+    float3 albedo, normal_map, emissive;
+    float2 mr;
+    float alpha;
 
-    MaterialDescription material = (material_descriptions)[0][material_id];
-    uint param_bitmask = material.param_bitmask;
+    {
+        uint material_id = vsout.material_id;
+        MaterialDescription material = material_descriptions[0][material_id];
+        uint param_bitmask = material.param_bitmask;
 
-    uint has_metallic_roughness = param_bitmask & HAS_METALLIC_ROUGHNESS;
-    uint has_normal = param_bitmask & HAS_NORMAL;
-    uint has_base_color = param_bitmask & HAS_BASE_COLOR;
-    uint has_emissive = param_bitmask & HAS_EMISSIVE;
-
-    float3 albedo =
-        has_base_color != 0
-            ? pow(SampleTex2D((material_textures)[material.base_color_texture_index], default_sampler, vsout.uv).xyz,
-                  float3(2.2))
-            : material.base_color;
-    float alpha = 1.0;
-    // uniform branching
-    if (material.blend_state == BLEND_STATE_MASKED) {
-        alpha =
-            SampleLvlTex2D((material_textures)[material.base_color_texture_index], default_sampler, vsout.uv, 0).w;
-        if (alpha<0.5) {
-            discard;
+        albedo =
+            (param_bitmask & HAS_BASE_COLOR_TEX) != 0
+                ? pow(material_textures[material.base_color_texture_index].Sample(default_sampler, vsout.uv).xyz,
+                    float3(2.2))
+                : material.base_color;
+        float alpha = 1.0;
+        // uniform branching
+        if (material.blend_state == BLEND_STATE_MASKED) {
+            alpha =
+                material_textures[material.base_color_texture_index].Sample(default_sampler, vsout.uv).w;
+            if (alpha < 0.5) {
+                discard;
+            }
         }
+
+        normal_map =
+            (param_bitmask & HAS_NORMAL_TEX) != 0
+                ? material_textures[material.normal_texture_index].Sample(default_sampler, vsout.uv).xyz
+                : float3(0.0, 0.0, 0.0); // normal map
+
+        mr =
+            (param_bitmask & HAS_METALLIC_ROUGHNESS_TEX) != 0
+                ? material_textures[material.metallic_roughness_texture_index].Sample(default_sampler, vsout.uv)
+                    .yz
+                : material.metallic_roughness;
+
+        emissive = (param_bitmask & HAS_EMISSIVE_TEX) != 0 ? pow(material_textures[material.emissive_textue_index].Sample(default_sampler, vsout.uv).xyz,
+                    float3(2.2)) : material.emissive;
     }
-
-    float3 normal_map =
-        has_normal != 0
-            ? SampleTex2D((material_textures)[material.normal_texture_index], default_sampler, vsout.uv).xyz
-            : float3(0.0, 0.0, 0.0); // normal map
-    float2 mr =
-        has_metallic_roughness != 0
-            ? SampleTex2D((material_textures)[material.metallic_roughness_texture_index], default_sampler, vsout.uv)
-                  .yz
-            : material.metallic_roughness;
-    float3 emissive =
-        has_emissive != 0
-            ? pow(SampleTex2D((material_textures)[material.emissive_textue_index], default_sampler, vsout.uv).xyz,
-                  float3(2.2))
-            : material.emissive;
-
     normal_map = normalize(2.0 * normal_map - 1.0); // [-1, 1]
 
     float3 gbuffer_normal;
 
-    if (has_normal != 0) {
+    if (normal_map != float3(0.0, 0.0, 0.0)) {
         // construct TBN
         float3 normal = normalize(vsout.normal);
         float3 tangent = normalize(vsout.tangent);
         float3 bitangent = normalize(cross(tangent, normal));
         // Calculate pixel normal using the normal map and the tangent space vectors
-        float3x3 tbn = make_f3x3_cols(tangent, bitangent, normal);
-        gbuffer_normal = normalize(tbn * normal_map);
+        float3x3 tbn = transpose(float3x3(tangent, bitangent, normal));
+        gbuffer_normal = normalize(mul(tbn, normal_map));
     } else {
         gbuffer_normal = normalize(vsout.normal);
     }
@@ -205,5 +196,5 @@ PSOutput PS_MAIN(VSOutput vsout, SV_PrimitiveID(uint) tri_id)
     psout.gbuffer4 = float2(curr_pos.xy - prev_pos.xy) * 0.5;// motionvector
     //psout.vbuffer0 = uint2(vsout.instance_id, tri_id);
     
-    RETURN(psout);
+    return psout;
 }
