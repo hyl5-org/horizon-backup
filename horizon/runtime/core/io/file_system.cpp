@@ -75,6 +75,7 @@ const Container::String get(const Type type, const Container::String &file) {
 
     return path + file;
 }
+
 } // namespace path
 
 bool is_directory(const Container::String &path) {
@@ -85,6 +86,12 @@ bool is_directory(const Container::String &path) {
         return true;
     } else {
         return false;
+    }
+}
+
+void create_directory(const Container::String &path) {
+    if (!is_directory(path)) {
+        CreateDirectory(path.c_str(), NULL);
     }
 }
 
@@ -205,7 +212,7 @@ bool write_json(nlohmann::json &data, const Container::String &filename) {
     }
 
     std::ofstream out_stream;
-    out_stream.open(fs::path::get(Horizon::fs::path::Type::Graphs) + filename, std::ios::out | std::ios::trunc);
+    out_stream.open(fs::path::get(fs::path::Type::Graphs) + filename, std::ios::out | std::ios::trunc);
 
     if (out_stream.good()) {
         out_stream << json.str();
@@ -217,4 +224,5 @@ bool write_json(nlohmann::json &data, const Container::String &filename) {
     out_stream.close();
     return true;
 }
+
 } // namespace Horizon::fs

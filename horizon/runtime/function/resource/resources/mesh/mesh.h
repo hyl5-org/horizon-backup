@@ -92,8 +92,8 @@ class Mesh {
 
     Transform transform;
 
-    u32 vertex_buffer_index;
-    u32 index_buffer_index;
+    //u32 vertex_buffer_index;
+    //u32 index_buffer_index;
 };
 
 // the smallest unit mesh to process loading, drawcall, material

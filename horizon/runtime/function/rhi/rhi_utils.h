@@ -828,7 +828,7 @@ struct ShaderCompilationSettings {
     ShaderOptimizationLevel optimization_level;
     ShaderTargetAPI target_api;
     std::filesystem::path input_dir, output_dir;
-    Container::Array<Container::String> shader_list; 
+    Container::Array<std::filesystem::path> shader_list; 
 };
 
 struct ShaderCompilationArgs {
@@ -836,8 +836,8 @@ struct ShaderCompilationArgs {
     ShaderTargetProfile target_profile;
     ShaderOptimizationLevel optimization_level;
     ShaderTargetAPI target_api;
-    Container::String output_file_name;
-    Container::String include_path;
+    std::filesystem::path output_file_name;
+    std::filesystem::path include_path;
 };
 
 } // namespace Horizon

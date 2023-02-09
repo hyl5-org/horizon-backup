@@ -7,9 +7,12 @@ file(GLOB_RECURSE SOURCE_FILES "*.cpp")
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${HEADER_FILES} ${SOURCE_FILES})
 
 add_library(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/horizon)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC third_party)
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/horizon/3rd_party)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER "Horizon/Runtime")
 

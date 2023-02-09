@@ -1,11 +1,14 @@
 #include "shader_compiler.h"
 
+#include <regex>
+// #include <CXXGraph/include/CXXGraph.hpp>
+
+#include "runtime/core/encryption/md5.h"
+#include "runtime/core/io/file_system.h"
 #include "runtime/core/log/log.h"
 #include "runtime/core/memory/allocators.h"
 #include "runtime/core/platform/platform.h"
 #include "runtime/core/utils/functions.h"
-#include "runtime/core/encryption/md5.h"
-#include "runtime/core/io/file_system.h"
 
 namespace Horizon {
 
@@ -21,39 +24,111 @@ void ShaderCompiler::Compile(const Container::String &blob, const ShaderCompilat
     ShaderCompiler::get().InternalCompile(blob, compile_args);
 }
 
-//void BuildShaderDependencyGraph(const ShaderCompilationSettings &settings){
-//
-//};
+void IterateIncludeFiles() {}
 
-void CheckMd5() {
+void BuildShaderDependencyGraph(const ShaderCompilationSettings &settings) {
+
+    //CXXGRAPH::Graph<u32> graph;
+}
+
+void CheckMd5() {}
+
+struct ShaderList {
+    bool need_compile = true;
+    ShaderCompilationArgs args;
+    u32 shader_text_index;
+};
+
+ShaderTargetProfile GetShaderTargetProfile(const char* str, ShaderModuleVersion version) {
+    ShaderType shader_type;
+    if (str == "VS_MAIN") {
+        switch (version) {
+        case Horizon::ShaderModuleVersion::SM_6_0:
+            return ShaderTargetProfile::VS_6_0;
+        case Horizon::ShaderModuleVersion::SM_6_1:
+            return ShaderTargetProfile::VS_6_1;
+        case Horizon::ShaderModuleVersion::SM_6_2:
+        case Horizon::ShaderModuleVersion::SM_6_3:
+        case Horizon::ShaderModuleVersion::SM_6_4:
+        case Horizon::ShaderModuleVersion::SM_6_5:
+        case Horizon::ShaderModuleVersion::SM_6_6:
+        case Horizon::ShaderModuleVersion::SM_6_7:
+        default:
+            break;
+        }
+    } else if (str == "PS_MAIN") {
+    
+    }
+
 
 }
 
 void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
-    if (ENABLE_SHADER_CACHE) {
-        //BuildShaderDependencyGraph(settings);
-        CheckMd5();
-    }
-    
-    for (auto &shader : settings.shader_list) {
-        auto path = settings.input_dir / shader;
-        ShaderCompilationArgs args{};
 
-        args.entry_point = "CS_MAIN";
-        args.optimization_level = ShaderOptimizationLevel::DEBUG;
-        args.target_api = ShaderTargetAPI::SPIRV;
-        args.target_profile = ShaderTargetProfile::CS_6_6;
-        args.output_file_name = "ssao.hsb";
-        args.include_path = "C:/hylu/horizon/horizon/assets/hlsl/include";
+    Container::Array<Container::String> shader_texts(settings.shader_list.size());
+    for (auto &shader : settings.shader_list) {
+        shader_texts.push_back(fs::read_text_file(shader.string().c_str())); // TODO(hylu): handle error
+    }
+
+    Container::Array<ShaderList> shader_list;
+
+    u32 index = 0;
+    for (auto &shader_text : shader_texts) {
+    {
+        std::regex entry{"[VPCHDM]S_MAIN"}; // vs, ps, cs, hs, ds, ms, TODO(hylu): rt
+        std::sregex_iterator pos(shader_text.cbegin(), shader_text.cend(), entry);
+
+        for (std::sregex_iterator end; pos != end; ++pos) {
+            LOG_INFO("entry point:{}", pos->str());
+            ShaderList l;
+            l.shader_text_index = index;
+            l.args.entry_point = pos->str();
+            l.args.optimization_level = settings.optimization_level;
+            l.args.target_api = settings.target_api;
+            l.args.include_path = settings.input_dir / "include";
+            l.args.output_file_name = settings.output_dir / / ".hsb";
+            l.args.target_profile = GetShaderTargetProfile(pos->str().c_str(), settings.sm_version);
+            shader_list.push_back(std::move(l));
+        }
+        index++;
+    }
+
+    if (ENABLE_SHADER_CACHE) {
+        Container::HashSet<std::filesystem::path> include_file_list;
+
+        // process include dependency graph
+        std::regex reg{"#include \"*.*\""};
+        std::sregex_iterator occurs(shader_text.cbegin(), shader_text.cend(), reg);
+
+        for (std::sregex_iterator end; occurs != end; ++occurs) {
+            Container::String matched_str{occurs->str()};
+            matched_str = matched_str.substr(matched_str.find("\"") + 1,
+                                             matched_str.length() - pos - 2); // remove #include " "
+            std::filesystem::path abs_include_path = settings.input_dir / matched_str;
+            include_file_list.emplace(abs_include_path);
+        }
+
         // blob = readfile;
-        const Container::String str {path.string()};
-        auto blob = fs::read_shader(str);
-        ShaderCompiler::Compile(blob, args);
+    }
+    // iterate graph,
+    // if leaf_need_recompile
+    // compileshaders
+    // cached md5 value
+    CheckMd5();
+    }
+
+    // compile shaders
+
+    for (auto &shader : shader_list) {
+        if (!shader.need_compile) {
+            continue;
+        }
+
+        ShaderCompiler::Compile(shader_texts[shader.shader_text_index], shader.args);
     }
 }
 
-void ShaderCompiler::InternalCompile(const Container::String &hlsl_text,
-                                     const ShaderCompilationArgs &compile_args) {
+void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const ShaderCompilationArgs &compile_args) {
     IDxcBlobEncoding *hlsl_blob{};
     CHECK_DX_RESULT(idxc_utils->CreateBlob(hlsl_text.data(), static_cast<u32>(hlsl_text.size()), 0, &hlsl_blob));
 

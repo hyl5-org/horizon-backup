@@ -70,7 +70,7 @@ void Mesh::ProcessMaterials(const aiScene *scene) {
         // shading model
         bool two_side;
         ret = scene->mMaterials[i]->Get(AI_MATKEY_TWOSIDED, two_side);
-        assert(ret = aiReturn::aiReturn_SUCCESS);
+        assert(ret == aiReturn::aiReturn_SUCCESS);
         if (two_side == true) {
             materials[i]->shading_model = ShadingModel::SHADING_MODEL_TWO_SIDE;
         }
@@ -78,7 +78,7 @@ void Mesh::ProcessMaterials(const aiScene *scene) {
 
         aiString alphaMode;
         ret = scene->mMaterials[i]->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
-        assert(ret = aiReturn::aiReturn_SUCCESS);
+        assert(ret == aiReturn::aiReturn_SUCCESS);
         if (strcmp(alphaMode.C_Str(), "BLEND") == 0) {
             materials[i]->blend_state = BlendState::BLEND_STATE_TRANSPARENT;
             materials[i]->blend_state = BlendState::BLEND_STATE_MASKED; // TODO()

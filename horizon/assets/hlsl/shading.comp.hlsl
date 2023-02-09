@@ -15,7 +15,8 @@ RES(Texture2D<float4>, depth_tex, UPDATE_FREQ_PER_FRAME);
 
 RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME);
 
-CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME) {
+CBUFFER(SceneConstants, UPDATE_FREQ_PER_FRAME)
+{
     float4x4 camera_view;
     float4x4 camera_projection;
     float4x4 camera_view_projection;
@@ -36,7 +37,7 @@ CBUFFER(LightCountUb, UPDATE_FREQ_PER_FRAME)
 
 CBUFFER(DirectionalLightDataUb, UPDATE_FREQ_PER_FRAME)
 {
-    LightParams  directional_light_data[MAX_DYNAMIC_LIGHT_COUNT];
+    LightParams directional_light_data[MAX_DYNAMIC_LIGHT_COUNT];
 };
 
 CBUFFER(LocalLightDataUb, UPDATE_FREQ_PER_FRAME)
@@ -57,13 +58,14 @@ RES(TextureCube<float4>, specular_map, UPDATE_FREQ_PER_FRAME);
 RES(Texture2D<float4>, specular_brdf_lut, UPDATE_FREQ_PER_FRAME);
 RES(SamplerState, ibl_sampler, UPDATE_FREQ_PER_FRAME);
 
-[numthreads(8, 8, 1)]
-void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, uint3 groupID: SV_GroupID) 
+[numthreads(8, 8, 1)] void CS_MAIN(uint3 thread_id
+                                   : SV_DispatchThreadID, uint3 groupID
+                                   : SV_GroupID)
 {
-    
     uint2 _resolution = resolution.xy - uint2(1.0, 1.0);
 
-    if (thread_id.x>_resolution.x || thread_id.y>_resolution.y) {
+    if (thread_id.x > _resolution.x || thread_id.y > _resolution.y)
+    {
         return;
     }
 
@@ -72,10 +74,10 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, uint3 groupID: SV_GroupID)
     float4 gbuffer1 = gbuffer1_tex.SampleLevel(default_sampler, uv, 0);
     float4 gbuffer2 = gbuffer2_tex.SampleLevel(default_sampler, uv, 0);
     float4 gbuffer3 = gbuffer3_tex.SampleLevel(default_sampler, uv, 0);
-    
+
     MaterialProperties mat;
     mat.material_id = groupID.z;
-    //mat.normal
+    // mat.normal
     mat.albedo = gbuffer1.xyz;
 
     mat.metallic = gbuffer3.x;
@@ -89,21 +91,23 @@ void CS_MAIN( uint3 thread_id: SV_DispatchThreadID, uint3 groupID: SV_GroupID)
     mat.roughness2 = Pow2(roughness);
     mat.f0 = lerp(float3(0.04, 0.04, 0.04), mat.albedo, mat.metallic);
 
-    float3 world_pos = ReconstructWorldPos((camera_inverse_view_projection),depth_tex.SampleLevel(default_sampler, uv, 0).r, uv);
-    float3 n =  normalize(gbuffer0.xyz);
+    float3 world_pos = ReconstructWorldPos((camera_inverse_view_projection), depth_tex.SampleLevel(default_sampler, uv, 0).r, uv);
+    float3 n = normalize(gbuffer0.xyz);
     float3 v = -normalize(world_pos - (camera_pos).xyz);
     float NoV = saturate(dot(n, v));
     float4 radiance = float4(0.0, 0.0, 0.0, 0.0);
 
     // direct lighting
-    for(uint i = 0; i < (directional_light_count); i++) {
+    for (uint i = 0; i < (directional_light_count); i++)
+    {
         radiance += RadianceDirectionalLight(mat, (directional_light_data)[i], n, v, world_pos);
     }
 
-    for(uint i = 0; i < (local_light_count); i++) {
+    for (uint i = 0; i < (local_light_count); i++)
+    {
         radiance += RadianceLocalLight(mat, (local_light_data)[i], n, v, world_pos);
     }
-  
+
     // indirect light
     float3 reflect_dir = normalize(2.0 * dot(n, v) * n - v);
     float3 specular = specular_map.SampleLevel(ibl_sampler, reflect_dir, mat.roughness * 8.0);
