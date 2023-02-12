@@ -10,6 +10,14 @@ horizon is a real time render framework.
 
 ---
 
+# Build status
+
+Windows : [MSVC], [Clang] 
+
+Linux : [GNU], [Clang]
+
+---
+
 # Build From Source
 
 **NOTES:** Horizon is not designed for cross-platform and portability, so build or run correctly on other platform is not guaranteed.
