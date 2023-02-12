@@ -2,6 +2,7 @@
 
 #include <regex>
 // #include <CXXGraph/include/CXXGraph.hpp>
+#include <boost/graph/edge_list.hpp>
 
 #include "runtime/core/encryption/md5.h"
 #include "runtime/core/io/file_system.h"
@@ -26,71 +27,75 @@ void ShaderCompiler::Compile(const Container::String &blob, const ShaderCompilat
 
 void IterateIncludeFiles() {}
 
-void BuildShaderDependencyGraph(const ShaderCompilationSettings &settings) {
-
-    //CXXGRAPH::Graph<u32> graph;
-}
+//void BuildShaderDependencyGraph(const ShaderCompilationSettings &settings) {
+//
+//    //CXXGRAPH::Graph<u32> graph;
+//}
 
 void CheckMd5() {}
 
 struct ShaderList {
-    bool need_compile = true;
+    const Container::String &shader_name;
     ShaderCompilationArgs args;
-    u32 shader_text_index;
+    bool need_compile = true;
 };
 
-ShaderTargetProfile GetShaderTargetProfile(const char* str, ShaderModuleVersion version) {
-    ShaderType shader_type;
-    if (str == "VS_MAIN") {
-        switch (version) {
-        case Horizon::ShaderModuleVersion::SM_6_0:
-            return ShaderTargetProfile::VS_6_0;
-        case Horizon::ShaderModuleVersion::SM_6_1:
-            return ShaderTargetProfile::VS_6_1;
-        case Horizon::ShaderModuleVersion::SM_6_2:
-        case Horizon::ShaderModuleVersion::SM_6_3:
-        case Horizon::ShaderModuleVersion::SM_6_4:
-        case Horizon::ShaderModuleVersion::SM_6_5:
-        case Horizon::ShaderModuleVersion::SM_6_6:
-        case Horizon::ShaderModuleVersion::SM_6_7:
-        default:
-            break;
-        }
-    } else if (str == "PS_MAIN") {
-    
+// TODO(hyl5): looking for better enum casting method
+// TODO(hylu): replace std::strcmp
+ShaderTargetProfile GetShaderTargetProfile(const char *str, ShaderModuleVersion version) {
+    constexpr ShaderModuleVersion base_version = ShaderModuleVersion::SM_6_0;
+    ShaderTargetProfile base_profile;
+    if (std::strcmp(str, "VS_MAIN") == 0) {
+        base_profile = ShaderTargetProfile::VS_6_0;
+    } else if (std::strcmp(str, "PS_MAIN") == 0) {
+        base_profile = ShaderTargetProfile::PS_6_0;
+    } else if (std::strcmp(str, "CS_MAIN") == 0) {
+        base_profile = ShaderTargetProfile::CS_6_0;
+    } else if (std::strcmp(str, "GS_MAIN") == 0) {
+        base_profile = ShaderTargetProfile::GS_6_0;
+    } else if (std::strcmp(str, "GS_MAIN") == 0) {
+        base_profile = ShaderTargetProfile::HS_6_0;
+    } else if (std::strcmp(str, "DS_MAIN") == 0) {
+        base_profile = ShaderTargetProfile::DS_6_0;
+    } else if (std::strcmp(str, "MS_MAIN") == 0) {
+        base_profile = ShaderTargetProfile::MS_6_0;
+    } else {
+        LOG_ERROR("invalid shader type");
+        return ShaderTargetProfile::INVALID;
     }
 
-
+    u32 version_offset = static_cast<u32>(version) - static_cast<u32>(base_version);
+    u32 target_version = static_cast<u32>(base_profile) + version_offset;
+    return static_cast<ShaderTargetProfile>(target_version);
 }
 
 void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
 
-    Container::Array<Container::String> shader_texts(settings.shader_list.size());
+    Container::HashMap<Container::String, Container::String> shader_texts(settings.shader_list.size());
     for (auto &shader : settings.shader_list) {
-        shader_texts.push_back(fs::read_text_file(shader.string().c_str())); // TODO(hylu): handle error
+        shader_texts.emplace(shader.filename().string(),
+                             fs::read_text_file(shader.string().c_str())); // TODO(hylu): handle error
     }
 
     Container::Array<ShaderList> shader_list;
 
-    u32 index = 0;
-    for (auto &shader_text : shader_texts) {
+    for (auto &[name,  text] : shader_texts) {
     {
         std::regex entry{"[VPCHDM]S_MAIN"}; // vs, ps, cs, hs, ds, ms, TODO(hylu): rt
-        std::sregex_iterator pos(shader_text.cbegin(), shader_text.cend(), entry);
+            std::sregex_iterator pos(text.cbegin(), text.cend(), entry);
 
         for (std::sregex_iterator end; pos != end; ++pos) {
-            LOG_INFO("entry point:{}", pos->str());
-            ShaderList l;
-            l.shader_text_index = index;
+            ShaderList l{name}; // shader text ref
             l.args.entry_point = pos->str();
             l.args.optimization_level = settings.optimization_level;
             l.args.target_api = settings.target_api;
             l.args.include_path = settings.input_dir / "include";
-            l.args.output_file_name = settings.output_dir / / ".hsb";
+            Container::String output_file_name = name + "." + Container::String{pos->str().substr(0, 2)} + ".hsb";// add api
+            
+            l.args.out_file_path = settings.output_dir / output_file_name;
             l.args.target_profile = GetShaderTargetProfile(pos->str().c_str(), settings.sm_version);
             shader_list.push_back(std::move(l));
         }
-        index++;
     }
 
     if (ENABLE_SHADER_CACHE) {
@@ -98,13 +103,14 @@ void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
 
         // process include dependency graph
         std::regex reg{"#include \"*.*\""};
-        std::sregex_iterator occurs(shader_text.cbegin(), shader_text.cend(), reg);
+        std::sregex_iterator occurs(text.cbegin(), text.cend(), reg);
 
         for (std::sregex_iterator end; occurs != end; ++occurs) {
             Container::String matched_str{occurs->str()};
-            matched_str = matched_str.substr(matched_str.find("\"") + 1,
+            auto pos = matched_str.find("\"") + 1;
+            matched_str = matched_str.substr(pos,
                                              matched_str.length() - pos - 2); // remove #include " "
-            std::filesystem::path abs_include_path = settings.input_dir / matched_str;
+            std::filesystem::path abs_include_path = settings.input_dir / matched_str.c_str();
             include_file_list.emplace(abs_include_path);
         }
 
@@ -114,7 +120,7 @@ void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
     // if leaf_need_recompile
     // compileshaders
     // cached md5 value
-    CheckMd5();
+    //CheckMd5();
     }
 
     // compile shaders
@@ -124,7 +130,7 @@ void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
             continue;
         }
 
-        ShaderCompiler::Compile(shader_texts[shader.shader_text_index], shader.args);
+        ShaderCompiler::Compile(shader_texts[shader.shader_name], shader.args);
     }
 }
 
@@ -136,8 +142,7 @@ void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const S
     Container::Array<LPCWSTR> compilation_arguments(&stack_memory);
 
     // entry point
-    Container::WString ep(&stack_memory);
-    ep = {compile_args.entry_point.begin(), compile_args.entry_point.end()};
+    Container::WString ep(compile_args.entry_point.begin(), compile_args.entry_point.end(), &stack_memory);
     compilation_arguments.push_back(L"-E");
     compilation_arguments.push_back(ep.c_str());
     // target profile
@@ -154,8 +159,9 @@ void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const S
 
     //compilation_arguments.push_back(ref_file.c_str());
 
-    Container::WString ip(&stack_memory);
-    ip = {compile_args.include_path.begin(), compile_args.include_path.end()};
+    auto ws = compile_args.include_path.wstring();
+    Container::WString ip(ws.begin(), ws.end(), &stack_memory);
+
     compilation_arguments.push_back(L"I");
     compilation_arguments.push_back(ip.c_str());
 
@@ -198,7 +204,7 @@ void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const S
     // save result to disk
     // TODO(hylu): prevent expose std::iostream to handle IO
     std::ofstream os;
-    os.open(compile_args.output_file_name, std::ios::binary | std::ios::out);
+    os.open(compile_args.out_file_path, std::ios::binary | std::ios::out);
     struct ShaderBlobHeader {
         //
         // version

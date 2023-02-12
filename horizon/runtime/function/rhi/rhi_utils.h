@@ -631,70 +631,139 @@ enum class RenderTargetStoreOp {
 enum class ShaderOptimizationLevel { DEBUG, O3 };
 
 // only support sm6 now
+//enum class ShaderTargetProfile {
+//    INVALID,
+//
+//    // 60
+//    VS_6_0,
+//    PS_6_0,
+//    GS_6_0,
+//    HS_6_0,
+//    DS_6_0,
+//    CS_6_0,
+//    MS_6_0,
+//    // 61
+//    VS_6_1,
+//    PS_6_1,
+//    GS_6_1,
+//    HS_6_1,
+//    DS_6_1,
+//    CS_6_1,
+//    MS_6_1,
+//    // 62
+//    VS_6_2,
+//    PS_6_2,
+//    GS_6_2,
+//    HS_6_2,
+//    DS_6_2,
+//    CS_6_2,
+//    MS_6_2,
+//    // 63
+//    VS_6_3,
+//    PS_6_3,
+//    GS_6_3,
+//    HS_6_3,
+//    DS_6_3,
+//    CS_6_3,
+//    MS_6_3,
+//    // 64
+//    VS_6_4,
+//    PS_6_4,
+//    GS_6_4,
+//    HS_6_4,
+//    DS_6_4,
+//    CS_6_4,
+//    MS_6_4,
+//    // 65
+//    VS_6_5,
+//    PS_6_5,
+//    GS_6_5,
+//    HS_6_5,
+//    DS_6_5,
+//    CS_6_5,
+//    MS_6_5,
+//    // 66
+//    VS_6_6,
+//    PS_6_6,
+//    GS_6_6,
+//    HS_6_6,
+//    DS_6_6,
+//    CS_6_6,
+//    MS_6_6,
+//    // 67
+//    VS_6_7,
+//    PS_6_7,
+//    GS_6_7,
+//    HS_6_7,
+//    DS_6_7,
+//    CS_6_7,
+//    MS_6_7,
+//};
+
 enum class ShaderTargetProfile {
-    // 60
+    INVALID,
+
     VS_6_0,
-    PS_6_0,
-    GS_6_0,
-    HS_6_0,
-    DS_6_0,
-    CS_6_0,
-    MS_6_0,
-    // 61
     VS_6_1,
-    PS_6_1,
-    GS_6_1,
-    HS_6_1,
-    DS_6_1,
-    CS_6_1,
-    MS_6_1,
-    // 62
     VS_6_2,
-    PS_6_2,
-    GS_6_2,
-    HS_6_2,
-    DS_6_2,
-    CS_6_2,
-    MS_6_2,
-    // 63
     VS_6_3,
-    PS_6_3,
-    GS_6_3,
-    HS_6_3,
-    DS_6_3,
-    CS_6_3,
-    MS_6_3,
-    // 64
     VS_6_4,
-    PS_6_4,
-    GS_6_4,
-    HS_6_4,
-    DS_6_4,
-    CS_6_4,
-    MS_6_4,
-    // 65
     VS_6_5,
-    PS_6_5,
-    GS_6_5,
-    HS_6_5,
-    DS_6_5,
-    CS_6_5,
-    MS_6_5,
-    // 66
     VS_6_6,
-    PS_6_6,
-    GS_6_6,
-    HS_6_6,
-    DS_6_6,
-    CS_6_6,
-    MS_6_6,
-    // 67
     VS_6_7,
+
+    PS_6_0,
+    PS_6_1,
+    PS_6_2,
+    PS_6_3,
+    PS_6_4,
+    PS_6_5,
+    PS_6_6,
     PS_6_7,
-    GS_6_7,
-    HS_6_7,
-    DS_6_7,
+
+    CS_6_0,
+    CS_6_1,
+    CS_6_2,
+    CS_6_3,
+    CS_6_4,
+    CS_6_5,
+    CS_6_6,
     CS_6_7,
+
+    GS_6_0,
+    GS_6_1,
+    GS_6_2,
+    GS_6_3,
+    GS_6_4,
+    GS_6_5,
+    GS_6_6,
+    GS_6_7,
+
+    HS_6_0,
+    HS_6_1,
+    HS_6_2,
+    HS_6_3,
+    HS_6_4,
+    HS_6_5,
+    HS_6_6,
+    HS_6_7,
+
+    DS_6_0,
+    DS_6_1,
+    DS_6_2,
+    DS_6_3,
+    DS_6_4,
+    DS_6_5,
+    DS_6_6,
+    DS_6_7,
+
+    MS_6_0,
+    MS_6_1,
+    MS_6_2,
+    MS_6_3,
+    MS_6_4,
+    MS_6_5,
+    MS_6_6,
     MS_6_7,
 };
 
@@ -836,7 +905,7 @@ struct ShaderCompilationArgs {
     ShaderTargetProfile target_profile;
     ShaderOptimizationLevel optimization_level;
     ShaderTargetAPI target_api;
-    std::filesystem::path output_file_name;
+    std::filesystem::path out_file_path;
     std::filesystem::path include_path;
 };
 

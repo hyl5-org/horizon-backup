@@ -21,7 +21,7 @@ TEST_CASE_FIXTURE(ShaderCompilationTest, "test") {
     args.optimization_level = ShaderOptimizationLevel::DEBUG;
     args.target_api = ShaderTargetAPI::SPIRV;
     args.target_profile = ShaderTargetProfile::CS_6_6;
-    args.output_file_name = "ssao.hsb";
+    args.out_file_path = "ssao.hsb";
     args.include_path = "C:/hylu/horizon/horizon/assets/hlsl/include";
     auto text = fs::read_text_file("C:/hylu/horizon/horizon/assets/hlsl/ssao.comp.hlsl");
     ShaderCompiler::Compile(text, args);
