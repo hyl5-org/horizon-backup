@@ -1,3 +1,6 @@
+#ifndef __DESCRIPTOR__
+#define __DESCRIPTOR__
+
 #define UPDATE_FREQ_NONE space0
 #define UPDATE_FREQ_PER_FRAME space1
 #define UPDATE_FREQ_PER_BATCH space2
@@ -10,3 +13,4 @@
 #define CBUFFER(NAME, FREQ) cbuffer NAME : register(FREQ)
 #define RES(TYPE, NAME, FREQ) TYPE NAME : register(FREQ)
 
+#endif

@@ -63,20 +63,18 @@
 
 // // RES(StructuredBuffer(PackedVsInput), vertex_buffers[], UPDATE_FREQ_BINDLESS);
 
-// struct VSOutput
-// {
-// 	float4 position: SV_Position;
-//     float3 world_pos: POSITION;
-// 	float3 normal: NORMAL;
-// 	float2 uv: TEXCOORD0;
-// 	float3 tangent: TANGENT;
-//     nointerpolation uint instance_id;
-// #ifdef VULKAN
-//     nointerpolation uint material_id;
-// #endif
-//     float4 curr_pos;
-//     float4 prev_pos;
-// };
+struct VSOutput
+{
+	float4 position: SV_Position;
+    float3 world_pos: POSITION;
+	float3 normal: NORMAL;
+	float2 uv: TEXCOORD0;
+	float3 tangent: TANGENT;
+    nointerpolation uint instance_id : TEXCOORD1;
+    nointerpolation uint material_id : TEXCOORD2;
+    float4 curr_pos : TEXCOORD3;
+    float4 prev_pos : TEXCOORD4;
+};
 
 
 // struct PSOutput 

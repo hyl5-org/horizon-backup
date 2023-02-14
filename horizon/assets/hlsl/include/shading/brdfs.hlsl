@@ -38,7 +38,8 @@ https://github.com/wdas/brdf/blob/425f6ef183f3e57c2a351622790ca8ea472ddfe1/src/b
 
 // Physically-Based Shading at Disney
 
-float3 DiffuseBurley12(float3 albedo, float roughness, float LoH, float NoL, float NoV) {
+float3 DiffuseBurley12(float3 albedo, float roughness, float LoH, float NoL, float NoV)
+{
     float fd90 = 0.5f + 2.0 * roughness * LoH * LoH;
     float f_theta_l = 1.0 + (fd90 - 1.0) * Pow5(1.0 - NoL); // incident light refractiion
     float f_theta_v = 1.0 + (fd90 - 1.0) * Pow5(1.0 - NoV); // outgoing light refraction
@@ -48,28 +49,36 @@ float3 DiffuseBurley12(float3 albedo, float roughness, float LoH, float NoL, flo
 // Based on Hanrahan-Krueger brdf approximation of isotropic bssrdf
 // 1.25 scale is used to (roughly) preserve albedo
 // Fss90 used to "flatten" retroreflection based on roughness
-float3 SubsurfaceBurley12(float3 albedo, float roughness, float NoL, float NoV, float LoH) {
+float3 SubsurfaceBurley12(float3 albedo, float roughness, float NoL, float NoV, float LoH)
+{
     float f_ss_90 = LoH * LoH * roughness;
     float f_ss = (1.0 + (f_ss_90 - 1.0) * Pow5(1.0 - NoL)) * (1.0 + (f_ss_90 - 1.0) * Pow5(1.0 - NoV));
     float3 ss = albedo * _1DIVPI * 1.25 * (f_ss * (1 / (NoL + NoV) - 0.5) + 0.5);
     return ss;
 }
 
-float NDF_GTR_GAMMA(float NoH, float a, float gamma) {
+float NDF_GTR_GAMMA(float NoH, float a, float gamma)
+{
     float k;
     float a2 = a * a;
-    if (a == 1.0) {
+    if (a == 1.0)
+    {
         k = 1.0;
-    } else if (gamma == 1.0 && a != 1.0) {
+    }
+    else if (gamma == 1.0 && a != 1.0)
+    {
         k = (a2 - 1.0) / log(a2);
-    } else if (gamma != 1.0 && a != 1.0) {
+    }
+    else if (gamma != 1.0 && a != 1.0)
+    {
         k = (gamma - 1.0) * (a2 - 1.0) / (1.0 - pow(a2, 1.0 - gamma));
     }
     float denom = pow(1.0 + Pow2(NoH) * (a2 - 1.0), gamma);
     return k / denom;
 }
 
-float NDF_GTR1(float NdotH, float a) {
+float NDF_GTR1(float NdotH, float a)
+{
     if (a >= 1)
         return 1 / _PI;
     float a2 = a * a;
@@ -77,42 +86,50 @@ float NDF_GTR1(float NdotH, float a) {
     return (a2 - 1) / (_PI * log(a2) * t);
 }
 
-float NDF_GTR2(float NdotH, float a2) {
+float NDF_GTR2(float NdotH, float a2)
+{
     float t = 1 + (a2 - 1) * NdotH * NdotH;
     return a2 / (_PI * t * t);
 }
 
-float NDF_GTR2_Aniso(float NoH, float XoH, float YoH, float ax, float ay) {
+float NDF_GTR2_Aniso(float NoH, float XoH, float YoH, float ax, float ay)
+{
     return 1 / (_PI * ax * ay * Pow2(Pow2(XoH / ax) + Pow2(YoH / ay) + NoH * NoH));
 }
 
-float Vis_Smith_GGX(float NdotV, float alphaG) {
+float Vis_Smith_GGX(float NdotV, float alphaG)
+{
     float a = alphaG * alphaG;
     float b = NdotV * NdotV;
     return 1 / (NdotV + SqrtFast2(a + b - a * b));
 }
 
-float Vis_Smith_GGX_Aniso(float NdotV, float VdotX, float VdotY, float ax, float ay) {
+float Vis_Smith_GGX_Aniso(float NdotV, float VdotX, float VdotY, float ax, float ay)
+{
     return 1 / (NdotV + SqrtFast2(Pow2(VdotX * ax) + Pow2(VdotY * ay) + Pow2(NdotV)));
 }
 
-float3 Sheen_Burley12(float3 albedo, float sheen_tint, float sheen, float f) {
+float3 Sheen_Burley12(float3 albedo, float sheen_tint, float sheen, float f)
+{
     float l = Luminance(albedo);                                  // luminance approx.
     float3 c_tint = l > 0.0 ? albedo / l : float3(1.0, 1.0, 1.0); // normalize lum. to isolate hue+sat
-    float3 c_sheen = mix(float3(1), c_tint, sheen_tint);
+    float3 c_sheen = lerp(float3(1.0, 1.0, 1.0), c_tint, sheen_tint);
     return f * sheen * c_sheen;
 }
 
-float3 ClearCoat_Burley12(float NoL, float NoV, float NoH, float clearcoat, float clearcoat_gloss) {
+float3 ClearCoat_Burley12(float NoL, float NoV, float NoH, float clearcoat, float clearcoat_gloss)
+{
     float Dr = NDF_GTR1(NoH, lerp(0.1, 0.001, clearcoat_gloss));
     float Fr = lerp(0.04, 1.0, Pow5(1.0 - NoH));
     float Gr = Vis_Smith_GGX(NoL, 0.25) * Vis_Smith_GGX(NoV, 0.25);
-    return float3(0.25 * clearcoat * Dr * Fr * Gr);
+    float a = 0.25 * clearcoat * Dr * Fr * Gr;
+    return float3(a, a, a);
 }
 
 // Moving Frostbite to Physically Based Rendering
 
-float3 DiffuseFrostbite14(float3 albedo, float roughness, float LoH, float NoL, float NoV) {
+float3 DiffuseFrostbite14(float3 albedo, float roughness, float LoH, float NoL, float NoV)
+{
     float linear_roughness = Pow2(roughness);
     float energy_normalization = lerp(1.0, 1.0 / 1.51, linear_roughness);
     return energy_normalization * DiffuseBurley12(albedo, roughness, LoH, NoL, NoV);
@@ -121,7 +138,8 @@ float3 DiffuseFrostbite14(float3 albedo, float roughness, float LoH, float NoL, 
 // Extending the Disney BRDF to a BSDF with Integrated Subsurface Scattering
 
 // decoupled smooth and rough mat.subsurface scattering
-float3 SubsurfaceBurley15(float3 albedo, float roughness, float NoL, float NoV, float LoM) {
+float3 SubsurfaceBurley15(float3 albedo, float roughness, float NoL, float NoV, float LoM)
+{
     //
     float f_l = Pow5(1.0 - NoL); // incident light refractiion
     float f_v = Pow5(1.0 - NoV); // outgoing light refraction
@@ -354,7 +372,7 @@ float3 SubsurfaceBurley15(float3 albedo, float roughness, float NoL, float NoV, 
 //     float YoH;
 // };
 
-// void InitBXDF( inout(BXDF) context, float3 N, float3 V, float3 L )
+// void InitBXDF( inout BXDF context, float3 N, float3 V, float3 L )
 // {
 // 	context.NoL = dot(N, L);
 // 	context.NoV = dot(N, V);
@@ -372,7 +390,7 @@ float3 SubsurfaceBurley15(float3 albedo, float roughness, float NoL, float NoV, 
 // 	context.YoH = 0.0f;
 // }
 
-// void InitBXDF( inout(BXDF) context, float3 N, float3 X, float3 Y, float3 V, float3 L )
+// void InitBXDF( inout BXDF context, float3 N, float3 X, float3 Y, float3 V, float3 L )
 // {
 // 	context.NoL = dot(N, L);
 // 	context.NoV = dot(N, V);

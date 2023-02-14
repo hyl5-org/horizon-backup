@@ -1,3 +1,6 @@
+#ifndef __LIGHT_DEFINATION__
+#define __LIGHT_DEFINATION__
+
 struct LightParams {
     float3 color; // r, g, b, intensity
     float intensity;
@@ -16,3 +19,5 @@ struct LightParams {
 #define DIRECTIONAL_LIGHT 0
 #define POINT_LIGHT 1
 #define SPOT_LIGHT 2
+
+#endif

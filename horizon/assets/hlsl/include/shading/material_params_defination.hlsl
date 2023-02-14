@@ -1,3 +1,6 @@
+#ifndef __MATERIAL_PARAMS_DEFINATION__
+#define __MATERIAL_PARAMS_DEFINATION__
+
 #define HAS_BASE_COLOR_TEX 0x01
 #define HAS_NORMAL_TEX 0x10
 #define HAS_METALLIC_ROUGHNESS_TEX 0x100
@@ -43,3 +46,5 @@ struct MaterialDescription {
 
 #define BLEND_STATE_OPAQUE 0
 #define BLEND_STATE_MASKED 1
+
+#endif

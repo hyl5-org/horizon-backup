@@ -1,3 +1,6 @@
+#ifndef __IBL__
+#define __IBL__
+
 #include "../common/common_math.hlsl"
 #include "brdf_horizon.hlsl"
 #include "material_params_defination.hlsl"
@@ -30,7 +33,8 @@ float3 Irradiance_SphericalHarmonics(float3 sh[9], float3 normal) {
 }
 
 float3 fresnelSchlickRoughness(float cosTheta, float3 F0, float roughness) {
-    return F0 + (max(float3(1.0 - roughness), F0) - F0) * Pow5(clamp(1.0 - cosTheta, 0.0, 1.0));
+    float a = 1.0 - roughness;
+    return F0 + (max(float3(a, a, a), F0) - F0) * Pow5(clamp(1.0 - cosTheta, 0.0, 1.0));
 }
 
 float3 IBL(float3 sh[9], float3 specular, float2 env, float3 normal, float NoV, MaterialProperties mat) {
@@ -38,8 +42,11 @@ float3 IBL(float3 sh[9], float3 specular, float2 env, float3 normal, float NoV, 
     float3 diffuse_color = Irradiance_SphericalHarmonics(sh, normal) * Diffuse_Lambert(mat.albedo);
 
     float3 f = fresnelSchlickRoughness(NoV, mat.f0, mat.roughness);
-    float3 kd = (float3(1.0) - f) * (1.0 - mat.metallic);
+    float3 a = float3(1.0, 1.0, 1.0) - f;
+    float3 kd = a * (1.0 - mat.metallic);
     diffuse_color *= kd;
     float3 ibl_color = diffuse_color + specular_color;
     return ibl_color;
 }
+
+#endif

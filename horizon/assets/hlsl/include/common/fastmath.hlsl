@@ -33,6 +33,9 @@
     THE SOFTWARE.
 ********************************************************************************/
 
+#ifndef __FAST_MATH__
+#define __FAST_MATH__
+
 #include "common_math.hlsl"
 
 // utils
@@ -380,3 +383,5 @@ float AsinFast4( float x )
 // 	uint param = uint((f + 127.0) * 8388608.0);
 // 	return asfloat (param);
 // }
+
+#endif

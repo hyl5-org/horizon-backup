@@ -1,3 +1,6 @@
+#ifndef __LIGHTING__
+#define __LIGHTING__
+
 #include "shading_models.hlsl"
 
 float DistanceFalloff(float dist, float r, float3 light_dir) {
@@ -64,3 +67,4 @@ float4 RadianceLocalLight(MaterialProperties mat, LightParams light, float3 n, f
     return float4(radiance, 1.0);
 }
 
+#endif

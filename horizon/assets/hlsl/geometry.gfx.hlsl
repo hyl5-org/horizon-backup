@@ -79,10 +79,10 @@ struct VSOutput
 	float3 normal: NORMAL;
 	float2 uv: TEXCOORD0;
 	float3 tangent: TANGENT;
-    nointerpolation uint instance_id;
-    nointerpolation uint material_id;
-    float4 curr_pos;
-    float4 prev_pos;
+    nointerpolation uint instance_id : TEXCOORD1;
+    nointerpolation uint material_id : TEXCOORD2;
+    float4 curr_pos : TEXCOORD3;
+    float4 prev_pos : TEXCOORD4;
 };
 
 struct PSOutput 
@@ -140,7 +140,7 @@ PSOutput PS_MAIN(VSOutput vsout, uint tri_id : SV_PrimitiveID)
         albedo =
             (param_bitmask & HAS_BASE_COLOR_TEX) != 0
                 ? pow(material_textures[material.base_color_texture_index].Sample(default_sampler, vsout.uv).xyz,
-                    float3(2.2))
+                    float3(2.2, 2.2, 2.2))
                 : material.base_color;
         float alpha = 1.0;
         // uniform branching
@@ -164,13 +164,13 @@ PSOutput PS_MAIN(VSOutput vsout, uint tri_id : SV_PrimitiveID)
                 : material.metallic_roughness;
 
         emissive = (param_bitmask & HAS_EMISSIVE_TEX) != 0 ? pow(material_textures[material.emissive_textue_index].Sample(default_sampler, vsout.uv).xyz,
-                    float3(2.2)) : material.emissive;
+                    float3(2.2, 2.2, 2.2)) : material.emissive;
     }
     normal_map = normalize(2.0 * normal_map - 1.0); // [-1, 1]
 
     float3 gbuffer_normal;
 
-    if (normal_map != float3(0.0, 0.0, 0.0)) {
+    if (!Equal(normal_map, float3(0.0, 0.0, 0.0))) {
         // construct TBN
         float3 normal = normalize(vsout.normal);
         float3 tangent = normalize(vsout.tangent);

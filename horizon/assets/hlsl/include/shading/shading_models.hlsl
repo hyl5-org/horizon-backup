@@ -1,3 +1,6 @@
+#ifndef __SHADING_MODELS__
+#define __SHADING_MODELS__
+
 #include "brdf_horizon.hlsl"
 #include "brdfs.hlsl"
 #include "material_params_defination.hlsl"
@@ -104,3 +107,5 @@ float3 Brdf_ClearCoat_Burley12(MaterialProperties mat, BXDF bxdf) {
 
     return standard + clearcoat;
 }
+
+#endif

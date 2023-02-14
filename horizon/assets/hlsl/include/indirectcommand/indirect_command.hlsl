@@ -1,3 +1,6 @@
+#ifndef __INDIRECT_COMMAND__
+#define __INDIRECT_COMMAND__
+
 struct DrawIndexedInstancedCommand {
     uint index_count;
     uint instance_count;
@@ -18,3 +21,5 @@ struct DispatchCommand {
     uint work_group_count_y;
     uint work_group_count_z;
 };
+
+#endif

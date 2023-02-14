@@ -1,3 +1,6 @@
+#ifndef __TRANSLATION__
+#define __TRANSLATION__
+
 #include "../geometry/geometry.hlsl"
 
 float3 ReconstructWorldPos(float4x4 inverse_vp, float depth, float2 fragCoord) {
@@ -18,3 +21,5 @@ ExpandedAABB ToWorld(ExpandedAABB aabb, float4x4 transform) {
     // TODO
     return ret;
 }
+
+#endif

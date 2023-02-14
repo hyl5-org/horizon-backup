@@ -1,3 +1,6 @@
+#ifndef __GEOMETRY__
+#define __GEOMETRY__
+
 struct AABB {
     float4 a;
     float4 b;
@@ -25,3 +28,5 @@ struct MeshInfo {
     float4x4 transform;
     uint index_count;
 };
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef __HASH__
+#define __HASH__
+
 float hash11(float p)
 {
     p = frac(p * .1031);
@@ -77,3 +80,5 @@ float4 hash44(float4 p4)
     p4 += dot(p4, p4.wzxy+33.33);
     return frac((p4.xxyz+p4.yzzw)*p4.zywx);
 }
+
+#endif

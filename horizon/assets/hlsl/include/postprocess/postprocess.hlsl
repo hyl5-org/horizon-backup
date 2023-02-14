@@ -1,3 +1,6 @@
+#ifndef __POST_PROCESS__
+#define __POST_PROCESS__
+
 float3 TonemapACES(float3 x)
 {
 	const float A = 2.51f;
@@ -12,3 +15,5 @@ float3 GammaCorrection(float3 x)
 {
 	return pow(x, 1.0 / 2.2);
 }
+
+#endif
