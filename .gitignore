@@ -5,6 +5,7 @@ horizon/assets/models
 horizon/assets/materials
 horizon/assets/generated_shaders
 horizon/assets/envrionment
+horizon/assets/hlsl/generated
 horizon/assets/shaders/bin
 horizon/assets/shaders/generated
 horizon/3rd_party/DirectXShaderCompiler

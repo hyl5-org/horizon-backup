@@ -1,8 +1,13 @@
 #include "shader_compiler.h"
 
 #include <regex>
+
 // #include <CXXGraph/include/CXXGraph.hpp>
 #include <boost/graph/edge_list.hpp>
+#include <boost/graph/adjacency_list.hpp>
+
+#include <tbb/blocked_range.h>
+#include <tbb/parallel_for.h>
 
 #include "runtime/core/encryption/md5.h"
 #include "runtime/core/io/file_system.h"
@@ -25,17 +30,8 @@ void ShaderCompiler::Compile(const Container::String &blob, const ShaderCompilat
     ShaderCompiler::get().InternalCompile(blob, compile_args);
 }
 
-void IterateIncludeFiles() {}
-
-//void BuildShaderDependencyGraph(const ShaderCompilationSettings &settings) {
-//
-//    //CXXGRAPH::Graph<u32> graph;
-//}
-
-void CheckMd5() {}
-
 struct ShaderList {
-    const Container::String &shader_name;
+    const std::filesystem::path path;
     ShaderCompilationArgs args;
     bool need_compile = true;
 };
@@ -69,69 +65,112 @@ ShaderTargetProfile GetShaderTargetProfile(const char *str, ShaderModuleVersion 
     return static_cast<ShaderTargetProfile>(target_version);
 }
 
+
+void IterateIncludeFiles(const std::filesystem::path &path,Container::HashMap<std::filesystem::path, Container::String>& include_map) {
+    // exist
+    if (include_map.find(path) != include_map.end())
+        return;
+    auto text = fs::read_text_file(Container::String{path.string()});
+    include_map.emplace(path, text);
+    std::regex reg{"#include \"*.*\""};
+    std::sregex_iterator occurs(text.cbegin(), text.cend(), reg);
+
+    for (std::sregex_iterator end; occurs != end; ++occurs) {
+        Container::String matched_str{occurs->str()};
+        auto pos = matched_str.find("\"") + 1;
+        matched_str = matched_str.substr(pos,
+                                         matched_str.length() - pos - 1); // remove #include " "
+        std::filesystem::path abs_include_path = path.parent_path() / matched_str.c_str();
+        IterateIncludeFiles(std::filesystem::absolute(abs_include_path), include_map);
+    }
+}
+
+void CheckMd5() {}
+
+
 void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
 
-    Container::HashMap<Container::String, Container::String> shader_texts(settings.shader_list.size());
-    for (auto &shader : settings.shader_list) {
-        shader_texts.emplace(shader.filename().string(),
-                             fs::read_text_file(shader.string().c_str())); // TODO(hylu): handle error
+    Container::HashMap<std::filesystem::path, Container::String> shader_texts(settings.shader_list.size());
+    Container::HashSet<std::filesystem::path> include_file_list;
+    for (auto &path : settings.shader_list) {
+        shader_texts.emplace(std::filesystem::absolute(path),
+                             fs::read_text_file(path.string().c_str())); // TODO(hylu): handle error
     }
 
     Container::Array<ShaderList> shader_list;
 
-    for (auto &[name,  text] : shader_texts) {
+    boost::adjacency_list<boost::listS, boost::vecS, boost::directedS> shader_dependency_graph;
+
+    for (auto &[path,  text] : shader_texts) {
     {
+        //boost::graph::add_vertex(shader_dependency_graph);
         std::regex entry{"[VPCHDM]S_MAIN"}; // vs, ps, cs, hs, ds, ms, TODO(hylu): rt
             std::sregex_iterator pos(text.cbegin(), text.cend(), entry);
 
         for (std::sregex_iterator end; pos != end; ++pos) {
-            ShaderList l{name}; // shader text ref
+            ShaderList l{path.string()}; // shader text ref=
             l.args.entry_point = pos->str();
             l.args.optimization_level = settings.optimization_level;
             l.args.target_api = settings.target_api;
             l.args.include_path = settings.input_dir / "include";
-            Container::String output_file_name = name + "." + Container::String{pos->str().substr(0, 2)} + ".hsb";// add api
-            
+            Container::String output_file_name =
+                Container::String{path.filename().string()} + "." + Container::String{pos->str().substr(0, 2)} + ".hsb"; // add api
+
             l.args.out_file_path = settings.output_dir / output_file_name;
             l.args.target_profile = GetShaderTargetProfile(pos->str().c_str(), settings.sm_version);
             shader_list.push_back(std::move(l));
         }
     }
 
-    if (ENABLE_SHADER_CACHE) {
-        Container::HashSet<std::filesystem::path> include_file_list;
+    // build shader dependency graph
 
-        // process include dependency graph
-        std::regex reg{"#include \"*.*\""};
-        std::sregex_iterator occurs(text.cbegin(), text.cend(), reg);
+    
+    // process include dependency graph
+    std::regex reg{"#include \"*.*\""};
+    std::sregex_iterator occurs(text.cbegin(), text.cend(), reg);
 
-        for (std::sregex_iterator end; occurs != end; ++occurs) {
-            Container::String matched_str{occurs->str()};
-            auto pos = matched_str.find("\"") + 1;
-            matched_str = matched_str.substr(pos,
-                                             matched_str.length() - pos - 2); // remove #include " "
-            std::filesystem::path abs_include_path = settings.input_dir / matched_str.c_str();
-            include_file_list.emplace(abs_include_path);
-        }
+    for (std::sregex_iterator end; occurs != end; ++occurs) {
+        Container::String matched_str{occurs->str()};
+        auto pos = matched_str.find("\"") + 1;
+        matched_str = matched_str.substr(pos,
+                                         matched_str.length() - pos - 1); // remove #include " "
+        std::filesystem::path abs_include_path = settings.input_dir / matched_str.c_str();
+        include_file_list.emplace(std::filesystem::absolute(abs_include_path));
+    }
+    }
 
-        // blob = readfile;
+    Container::HashMap<std::filesystem::path, Container::String> include_file_text; 
+
+    for (auto &include_file : include_file_list) {
+        IterateIncludeFiles(include_file, include_file_text);
     }
     // iterate graph,
     // if leaf_need_recompile
     // compileshaders
     // cached md5 value
     //CheckMd5();
-    }
 
-    // compile shaders
 
-    for (auto &shader : shader_list) {
-        if (!shader.need_compile) {
-            continue;
-        }
+    // multithread shader compiling
+    tbb::parallel_for(tbb::blocked_range<u32>(0, static_cast<u32>(shader_list.size())),
+                      [&shader_list, &shader_texts](const tbb::blocked_range<u32> &r) {
+                          for (u32 v = r.begin(); v < r.end(); v++) {
+                              auto &shader = shader_list[v];
+                              if (!shader.need_compile) {
+                                  continue;
+                              }
 
-        ShaderCompiler::Compile(shader_texts[shader.shader_name], shader.args);
-    }
+                              ShaderCompiler::Compile(shader_texts[shader.path], shader.args);
+                          }
+                      });
+
+    //for (auto &shader : shader_list) {
+    //    if (!shader.need_compile) {
+    //        continue;
+    //    }
+
+    //    ShaderCompiler::Compile(shader_texts[shader.path], shader.args);
+    //}
 }
 
 void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const ShaderCompilationArgs &compile_args) {
@@ -182,6 +221,8 @@ void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const S
 
     if (compile_args.target_api == ShaderTargetAPI::SPIRV) {
         compilation_arguments.push_back(L"-spirv");
+        compilation_arguments.push_back(L"-fspv-target-env=vulkan1.3");
+
     }
 
     DxcBuffer source_buffer{hlsl_blob->GetBufferPointer(), hlsl_blob->GetBufferSize(), 0u};

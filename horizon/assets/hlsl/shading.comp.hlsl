@@ -98,22 +98,22 @@ RES(SamplerState, ibl_sampler, UPDATE_FREQ_PER_FRAME);
     float4 radiance = float4(0.0, 0.0, 0.0, 0.0);
 
     // direct lighting
-    for (uint i = 0; i < (directional_light_count); i++)
+    for (uint i = 0; i < directional_light_count; i++)
     {
-        radiance += RadianceDirectionalLight(mat, (directional_light_data)[i], n, v, world_pos);
+        radiance += RadianceDirectionalLight(mat, directional_light_data[i], n, v, world_pos);
     }
 
-    for (uint i = 0; i < (local_light_count); i++)
+    for (uint j = 0; j < local_light_count; j++)
     {
-        radiance += RadianceLocalLight(mat, (local_light_data)[i], n, v, world_pos);
+        radiance += RadianceLocalLight(mat, local_light_data[j], n, v, world_pos);
     }
 
     // indirect light
     float3 reflect_dir = normalize(2.0 * dot(n, v) * n - v);
-    float3 specular = specular_map.SampleLevel(ibl_sampler, reflect_dir, mat.roughness * 8.0);
+    float3 specular = specular_map.SampleLevel(ibl_sampler, reflect_dir, mat.roughness * 8.0).xyz;
     float2 ibl_uv = float2(mat.roughness, NoV);
     float2 env = specular_brdf_lut.SampleLevel(ibl_sampler, ibl_uv, 0).xy;
     float3 ambient = IBL((sh), specular, env, n, NoV, mat) * ao_tex[thread_id.xy].r * (ibl_intensity).x;
     radiance.xyz += ambient;
-    out_color[thread_id.x] = radiance;
+    out_color[thread_id.xy] = radiance;
 }
