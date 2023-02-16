@@ -84,11 +84,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc)
 find_package(nlohmann_json CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json)
 
-#add_subdirectory(CXXGraph)
+find_package(cryptopp CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE cryptopp::cryptopp)
 
-#target_link_libraries(${PROJECT_NAME} PRIVATE CXXGraph)
-# target_include_directories(${PROJECT_NAME} PUBLIC CXXGraph/include/)
-
-    # find_package(igraph CONFIG REQUIRED)
-    # # note: 2 additional targets are not displayed.
-    # target_link_libraries(main PRIVATE igraph::pcg igraph::bliss igraph::igraph igraph::prpack)

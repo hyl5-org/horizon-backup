@@ -107,7 +107,7 @@ void create_path(const Container::String &root, const Container::String &path) {
     }
 }
 
-Container::String read_text_file(const Container::String &filename) {
+Container::String read_text_file(const std::filesystem::path filename) {
     Container::Array<Container::String> data;
 
     std::ifstream file;
@@ -115,7 +115,7 @@ Container::String read_text_file(const Container::String &filename) {
     file.open(filename, std::ios::in);
 
     if (!file.is_open()) {
-        LOG_ERROR("Failed to open file : {}", filename);
+        LOG_ERROR("Failed to open file : {}", filename.string());
         return {};
     }
 
@@ -130,7 +130,7 @@ Container::Array<u8> read_binary_file(const Container::String &filename, const u
     file.open(filename, std::ios::in | std::ios::binary);
 
     if (!file.is_open()) {
-        LOG_ERROR("Failed to open file : {}", filename);
+        LOG_ERROR("Failed to open file : {}", filename.c_str());
         return {};
     }
 
@@ -146,6 +146,19 @@ Container::Array<u8> read_binary_file(const Container::String &filename, const u
     file.close();
 
     return data;
+}
+
+void write_text_file(const std::filesystem::path filename, void *data, u64 size) {
+    std::ofstream file;
+    file.open(filename, std::ios::out | std::ios::trunc);
+
+    if (!file.is_open()) {
+        LOG_ERROR("Failed to open file : {}", filename.string());
+        return;
+    }
+
+    file.write(reinterpret_cast<const char *>(data), size);
+    file.close();
 }
 
 static void write_binary_file(const Container::Array<u8> &data, const Container::String &filename,

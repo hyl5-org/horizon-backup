@@ -163,9 +163,10 @@ void write_image(const u8 *data, const Container::String &filename, const u32 wi
 bool write_json(nlohmann::json &data, const Container::String &filename);
 
 
-Container::String read_text_file(const Container::String &filename);
+Container::String read_text_file(const std::filesystem::path filename);
 
 Container::Array<u8> read_binary_file(const Container::String &filename, const uint32_t count);
 
+void write_text_file(const std::filesystem::path filename, void *data, u64 size);
 
 } // namespace Horizon::fs

@@ -25,3 +25,5 @@
 #include <runtime/interface/horizon_runtime.h>
 
 #include <runtime/system/render/RenderSystem.h>
+
+#include <runtime/core/encryption/md5.h>
