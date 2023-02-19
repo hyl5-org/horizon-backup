@@ -3,7 +3,14 @@
 #include <doctest/doctest.h>
 
 #include "config.h"
-
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_utility.hpp>
+#include <boost/property_map/property_map.hpp>
+#include <boost/algorithm/string.hpp>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <unordered_set>
 namespace TEST::ShaderCompilationTest {
 
 using namespace Horizon;

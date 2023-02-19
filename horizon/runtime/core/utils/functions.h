@@ -10,6 +10,9 @@
 
 // standard libraries
 #include <type_traits>
+#include <chrono>
+#include <filesystem>
+#include <ctime>
 
 // third party libraries
 
@@ -45,6 +48,20 @@ void HashCombine(u64 &seed, const T &v) {
     u64 hash = hasher(v);
     hash += 0x9e3779b9 + (seed << 6) + (seed >> 2);
     seed ^= hash;
+}
+
+//// require c++20
+//Container::String to_string(std::filesystem::file_time_type const &ftime) {
+//    std::time_t cftime = std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(ftime));
+//    Container::String str = std::asctime(std::localtime(&cftime));
+//    str.pop_back(); // rm the trailing '\n' put by `asctime`
+//    return str;
+//}
+
+template <typename TP> std::time_t to_time_t(TP tp) {
+    using namespace std::chrono;
+    auto sctp = time_point_cast<system_clock::duration>(tp - TP::clock::now() + system_clock::now());
+    return system_clock::to_time_t(sctp);
 }
 
 } // namespace Horizons

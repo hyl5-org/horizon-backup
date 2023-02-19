@@ -151,7 +151,7 @@ performance-no-automatic-move,
 performance-noexcept-move-constructor,
 performance-unnecessary-copy-initialization,
 performance-unnecessary-value-param,
-
+readability-convert-member-functions-to-static,
 readability-inconsistent-declaration-parameter-name,
 readability-implicit-bool-conversion,
 readability-container-size-empty,

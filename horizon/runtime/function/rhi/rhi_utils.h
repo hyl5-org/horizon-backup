@@ -892,6 +892,7 @@ enum class ShaderTargetAPI {
     SPIRV, DXIL
 };
 
+// TODO(hylu): some setting might be shader dependent
 struct ShaderCompilationSettings {
     ShaderModuleVersion sm_version{ShaderModuleVersion::SM_6_6};
     ShaderOptimizationLevel optimization_level;

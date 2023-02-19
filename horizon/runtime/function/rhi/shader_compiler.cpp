@@ -4,6 +4,11 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/edge_list.hpp>
+#include <boost/graph/depth_first_search.hpp>
+
+#include <boost/graph/graph_utility.hpp>
+#include <boost/property_map/property_map.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
@@ -25,6 +30,8 @@ template <typename X, typename Y> struct std::hash<std::pair<X, Y>> {
 
 namespace Horizon {
 
+using namespace boost;
+
 ShaderCompiler::ShaderCompiler() noexcept {
     CHECK_DX_RESULT(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&idxc_compiler)));
     CHECK_DX_RESULT(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&idxc_utils)));
@@ -37,12 +44,24 @@ void ShaderCompiler::Compile(const Container::String &blob, const ShaderCompilat
     ShaderCompiler::get().InternalCompile(blob, compile_args);
 }
 
-struct ShaderList {
-    const std::filesystem::path path;
-    ShaderCompilationArgs args;
-    bool need_compile = true;
-    Container::String graph_node_index;
+struct ShaderCompilationSetting {
+    const std::filesystem::path path; // key to index the shader_text map
+    ShaderCompilationArgs args; // args
 };
+
+struct FileNode {
+    std::optional<std::filesystem::path> shader_path;
+    bool need_compile;
+    u64 graph_node_index;
+    Container::Array<std::filesystem::path> header_files;
+};
+
+static std::unordered_set<std::pair<u64, u64>> edge_list;
+static u64 node_index;
+static std::vector<std::filesystem::path> node_index_map;
+
+static std::filesystem::path cached_project_dir = std::filesystem::temp_directory_path() / "horizon";
+static std::filesystem::path cached_shader_dir = cached_project_dir / "shader";
 
 // TODO(hyl5): looking for better enum casting method
 // TODO(hylu): replace std::strcmp
@@ -73,138 +92,144 @@ ShaderTargetProfile GetShaderTargetProfile(const char *str, ShaderModuleVersion 
     return static_cast<ShaderTargetProfile>(target_version);
 }
 
-struct FileNode {
-    bool need_compile = true;
-    Container::String text;
-    u64 graph_node_index;
-};
-
-static std::unordered_set<std::pair<u64, u64>> edge_list;
-static u64 node_index;
-void IterateIncludeFiles(const std::filesystem::path &path,
-                         Container::HashMap<std::filesystem::path, FileNode> &include_map, u64 in_node) {
+// we read once to build dependency graph and cache
+void IterateHeaderFiles(const std::filesystem::path &path,
+                         Container::HashMap<std::filesystem::path, FileNode> &dependency_map, u64 in_node, bool is_leaf_node) {
     // exist
-    auto it = include_map.find(path);
-    if (it != include_map.end()) {
+    auto it = dependency_map.find(path);
+    // ignore leaf
+    if (it != dependency_map.end() && !it->second.shader_path.has_value()) {
         edge_list.emplace(std::make_pair(in_node, it->second.graph_node_index));
         return;
     }
-    auto text = fs::read_text_file(Container::String{path.string()});
     FileNode current_node;
-    //u64 seed = 0;
-    //HashCombine(seed, path.string());
-    //current_node.graph_node_index = seed;
-    node_index++;
-    current_node.graph_node_index = node_index;
-    current_node.need_compile = true;
-    current_node.text = text;
-    include_map.emplace(path, std::move(current_node));
-    edge_list.emplace(std::make_pair(in_node, node_index));
-    std::regex reg{"#include \"*.*\""};
-    std::sregex_iterator occurs(text.cbegin(), text.cend(), reg);
-
-    for (std::sregex_iterator end; occurs != end; ++occurs) {
-        Container::String matched_str{occurs->str()};
-        auto pos = matched_str.find("\"") + 1;
-        matched_str = matched_str.substr(pos,
-                                         matched_str.length() - pos - 1); // remove #include " "
-        std::filesystem::path abs_include_path = path.parent_path() / matched_str.c_str();
-        IterateIncludeFiles(std::filesystem::absolute(abs_include_path), include_map, node_index);
+    auto text = fs::read_text_file(Container::String{path.string()});
+    // we use last write time instead of md5, but that might not accurate
+    //auto md5_value = md5(text);
+    std::filesystem::file_time_type last_mod_time = std::filesystem::last_write_time(path);
+    auto s_last_mod_time = Container::String{std::to_string(to_time_t(last_mod_time))};
+    auto cached_path = cached_shader_dir / path.filename(); // FIXME(hylu): filename may conflict
+    if (std::filesystem::exists(cached_path) && (fs::read_text_file(cached_path) == s_last_mod_time)) {
+        current_node.need_compile = false;
+    } else {
+        fs::write_text_file(Container::String{cached_path.string()}, s_last_mod_time.data(),
+                            s_last_mod_time.size() * sizeof(char));
     }
+    if (is_leaf_node) {
+        current_node.shader_path = path;
+    }
+    current_node.graph_node_index = node_index;
+    node_index_map.push_back(path);
+    dependency_map.emplace(path, std::move(current_node));
+    edge_list.emplace(std::make_pair(in_node, node_index));
+    node_index++;
+
+    // the following code is generated from ChatGPT.
+    std::regex reg{"#include\\s+[\"<](.*)[\">]"};
+    std::smatch match;
+    // Search for all #include directives in the file
+    std::string::const_iterator search_start(text.cbegin());
+    while (std::regex_search(search_start, text.cend(), match, reg)) {
+        std::filesystem::path abs_include_path = path.parent_path() / match[1].str();
+        // Move the search start to the end of the matched string
+        search_start = match.suffix().first;
+        IterateHeaderFiles(std::filesystem::absolute(abs_include_path), dependency_map, node_index, false);
+    }
+
+    //std::sregex_iterator occurs(text.cbegin(), text.cend(), reg);
+    //// iterate parent header file
+    //for (std::sregex_iterator end; occurs != end; ++occurs) {
+    //    Container::String matched_str{occurs->str()};
+    //    auto pos = matched_str.find("\"") + 1;
+    //    matched_str = matched_str.substr(pos,
+    //                                     matched_str.length() - pos - 1); // remove #include " "
+    //    std::filesystem::path abs_include_path = path.parent_path() / matched_str.c_str();
+    //    IterateHeaderFiles(std::filesystem::absolute(abs_include_path), dependency_map, node_index, false);
+    //}
 }
 
 void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
-    Container::HashMap<std::filesystem::path, Container::String> shader_texts(settings.shader_list.size());
-    //Container::HashSet<std::filesystem::path> include_file_list;
-    for (auto &path : settings.shader_list) {
-        shader_texts.emplace(std::filesystem::absolute(path),
-                             fs::read_text_file(path.string().c_str())); // TODO(hylu): handle error
-    }
 
-    Container::Array<ShaderList> shader_list;
-
-    Container::HashMap<std::filesystem::path, FileNode> include_file_text;
-    for (auto &[path, text] : shader_texts) {
-        {
-            //boost::graph::add_vertex(shader_dependency_graph);
-            std::regex entry{"[VPCHDM]S_MAIN"}; // vs, ps, cs, hs, ds, ms, TODO(hylu): rt
-            std::sregex_iterator pos(text.cbegin(), text.cend(), entry);
-
-            for (std::sregex_iterator end; pos != end; ++pos) {
-                ShaderList l{path.string()}; // shader text ref=
-                l.args.entry_point = pos->str();
-                l.args.optimization_level = settings.optimization_level;
-                l.args.target_api = settings.target_api;
-                l.args.include_path = settings.input_dir / "include";
-                Container::String output_file_name = Container::String{path.filename().string()} + "." +
-                                                     Container::String{pos->str().substr(0, 2)} + ".hsb"; // add api
-
-                l.args.out_file_path = settings.output_dir / output_file_name;
-                l.args.target_profile = GetShaderTargetProfile(pos->str().c_str(), settings.sm_version);
-                l.graph_node_index = Container::String{path.string()};
-                shader_list.push_back(std::move(l));
-            }
-        }
-
-        // build shader dependency graph
-
-        // process include dependency graph
-        std::regex reg{"#include \"*.*\""};
-        std::sregex_iterator occurs(text.cbegin(), text.cend(), reg);
-
-        for (std::sregex_iterator end; occurs != end; ++occurs) {
-            Container::String matched_str{occurs->str()};
-            auto pos = matched_str.find("\"") + 1;
-            matched_str = matched_str.substr(pos,
-                                             matched_str.length() - pos - 1); // remove #include " "
-            std::filesystem::path abs_include_path = settings.input_dir / matched_str.c_str();
-            //include_file_list.emplace(std::filesystem::absolute(abs_include_path));
-            //u64 seed = 0;
-            //HashCombine(seed, path.string());
-             IterateIncludeFiles(std::filesystem::absolute(abs_include_path), include_file_text, node_index);
-        }
-        node_index++;
-    }
-
-    boost::adjacency_list<boost::listS, boost::vecS, boost::directedS> shader_dependency_graph;
-
-    for (auto &edge : edge_list) {
-        boost::add_edge(edge.first, edge.second, shader_dependency_graph);
-    }
-
-
-    std::filesystem::path cached_project_dir = std::filesystem::temp_directory_path() / "horizon";
-    std::filesystem::path cached_shader_dir = cached_project_dir / "shader";
+    // create cached directory
     if (!std::filesystem::exists(cached_project_dir)) {
         std::filesystem::create_directory(cached_project_dir);
     }
     if (!std::filesystem::exists(cached_shader_dir)) {
         std::filesystem::create_directory(cached_shader_dir);
     }
-    for (auto &[path, info] : include_file_text) {
-        auto md5_value = md5(info.text);
-        auto cached_path = cached_shader_dir / path.filename(); // filename may conflict
-        if (std::filesystem::exists(cached_path) && (fs::read_text_file(cached_path) == md5_value)) {
-            info.need_compile = false;
-             info.graph_node_index;
-        } else {
-            fs::write_text_file(Container::String{cached_path.string()}, md5_value.data(),
-                                md5_value.size() * sizeof(char));
+
+    // shader text map, value contains shader blob and cache stat.
+    Container::HashMap<std::filesystem::path, std::pair<Container::String, bool>> shader_texts(settings.shader_list.size());
+
+    for (auto &path : settings.shader_list) {
+        shader_texts.emplace(std::filesystem::absolute(path), std::make_pair(fs::read_text_file(path.string().c_str()),
+                                                                             true)); // TODO(hylu): handle file reading error
+    }
+
+    // extract args from shader text for compiling
+    // each ShaderCompilationSetting
+    Container::Array<ShaderCompilationSetting> shader_compilation_settings;
+    for (auto &[path, text] : shader_texts) {
+        std::regex entry{"[VPCHDM]S_MAIN"}; // vs, ps, cs, hs, ds, ms, TODO(hylu): rt
+        std::sregex_iterator pos(text.first.cbegin(), text.first.cend(), entry);
+
+        for (std::sregex_iterator end; pos != end; ++pos) {
+            ShaderCompilationSetting scs{path.string()}; // shader text ref
+            scs.args.entry_point = pos->str();
+            scs.args.optimization_level = settings.optimization_level;
+            scs.args.target_api = settings.target_api;
+            scs.args.include_path = settings.input_dir / "include";
+            Container::String output_file_name = Container::String{path.filename().string()} + "." +
+                                                 Container::String{pos->str().substr(0, 2)} + ".hsb"; // add api
+            scs.args.out_file_path = settings.output_dir / output_file_name;
+            scs.args.target_profile = GetShaderTargetProfile(pos->str().c_str(), settings.sm_version);
+            shader_compilation_settings.push_back(std::move(scs));
         }
     }
-    // multithread shader compiling
-    tbb::parallel_for(tbb::blocked_range<u32>(0, static_cast<u32>(shader_list.size())),
-                      [&shader_list, &shader_texts](const tbb::blocked_range<u32> &r) {
-                          for (u32 v = r.begin(); v < r.end(); v++) {
-                              auto &shader = shader_list[v];
-                              if (!shader.need_compile) {
-                                  continue;
-                              }
 
-                              ShaderCompiler::Compile(shader_texts[shader.path], shader.args);
+    Container::HashMap<std::filesystem::path, FileNode> shader_node_map;
+    // build shader dependency graph
+    for (auto &[path, text] : shader_texts) {
+        IterateHeaderFiles(path, shader_node_map, node_index, true);
+    }
+
+    boost::adjacency_list<boost::setS, boost::vecS, boost::directedS> shader_dependency_graph(edge_list.begin(),
+                                                                                               edge_list.end(), edge_list.size());
+    // iterate graph
+    for (u32 idx = 0; idx < node_index_map.size(); idx++) {
+    
+        const auto &v = vertex(idx, shader_dependency_graph);
+        
+    }
+    //for () {
+    //    if (curretn_node.shader_path.has_value()) {
+
+    //        auto parent_path = shader_path;
+    //        shader_texts[parent_path].second &= curretn_node.need_compile;
+    //    }
+    //}
+
+#ifndef NDBUG
+    for (auto &idx : node_index_map) {
+        Container::String text = shader_node_map[idx].shader_path.has_value() ? "is leaf node" : "not leaf node";
+        LOG_INFO("{}, {}", idx.filename().string(), text);
+    }
+#endif // ! NDBUG
+
+    // multithread shader compiling
+    tbb::parallel_for(tbb::blocked_range<u32>(0, static_cast<u32>(shader_compilation_settings.size())),
+                      [&shader_compilation_settings, &shader_texts](const tbb::blocked_range<u32> &r) {
+                          for (u32 v = r.begin(); v < r.end(); v++) {
+                              auto &shader = shader_compilation_settings[v];
+                              auto &[shader_text, need_compile] = shader_texts[shader.path];
+                              if (need_compile == true) {
+
+                                  ShaderCompiler::Compile(shader_text, shader.args);
+                              }
                           }
                       });
 
+    // single thread version
     //for (auto &shader : shader_list) {
     //    if (!shader.need_compile) {
     //        continue;
@@ -213,6 +238,7 @@ void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
     //    ShaderCompiler::Compile(shader_texts[shader.path], shader.args);
     //}
 }
+
 
 void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const ShaderCompilationArgs &compile_args) {
     IDxcBlobEncoding *hlsl_blob{};
