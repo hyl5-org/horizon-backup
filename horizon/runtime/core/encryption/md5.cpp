@@ -3,9 +3,10 @@
 #include <cryptopp/md5.h>
 #include <cryptopp/hex.h>
 #include <cryptopp/strciphr.h>
-namespace Horizon {
 
 using namespace CryptoPP;
+
+namespace Horizon {
 
 Container::String md5(const Container::String &input) {
     CryptoPP::MD5 hash;

@@ -3,12 +3,17 @@
 #include <regex>
 
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/edge_list.hpp>
+#include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/edge_list.hpp>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/graph/graph_utility.hpp>
 #include <boost/property_map/property_map.hpp>
-#include <boost/algorithm/string.hpp>
+#include <boost/graph/degree_centrality.hpp>
+#include <boost/graph/directed_graph.hpp>
+
+
 
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
@@ -28,9 +33,24 @@ template <typename X, typename Y> struct std::hash<std::pair<X, Y>> {
 };
 } // namespace std
 
+using namespace boost;
+
 namespace Horizon {
 
-using namespace boost;
+using Graph = adjacency_list<vecS, vecS, directedS>;
+
+struct ShaderCompilationSetting {
+    const std::filesystem::path path; // key to index the shader_text map
+    ShaderCompilationArgs args;       // args
+};
+
+struct FileNode {
+    bool need_compile;
+    Container::Array<std::filesystem::path> header_files;
+};
+
+static std::filesystem::path cached_project_dir = std::filesystem::temp_directory_path() / "horizon";
+static std::filesystem::path cached_shader_dir = cached_project_dir / "shader";
 
 ShaderCompiler::ShaderCompiler() noexcept {
     CHECK_DX_RESULT(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&idxc_compiler)));
@@ -43,25 +63,6 @@ ShaderCompiler::~ShaderCompiler() noexcept {}
 void ShaderCompiler::Compile(const Container::String &blob, const ShaderCompilationArgs &compile_args) {
     ShaderCompiler::get().InternalCompile(blob, compile_args);
 }
-
-struct ShaderCompilationSetting {
-    const std::filesystem::path path; // key to index the shader_text map
-    ShaderCompilationArgs args; // args
-};
-
-struct FileNode {
-    std::optional<std::filesystem::path> shader_path;
-    bool need_compile;
-    u64 graph_node_index;
-    Container::Array<std::filesystem::path> header_files;
-};
-
-static std::unordered_set<std::pair<u64, u64>> edge_list;
-static u64 node_index;
-static std::vector<std::filesystem::path> node_index_map;
-
-static std::filesystem::path cached_project_dir = std::filesystem::temp_directory_path() / "horizon";
-static std::filesystem::path cached_shader_dir = cached_project_dir / "shader";
 
 // TODO(hyl5): looking for better enum casting method
 // TODO(hylu): replace std::strcmp
@@ -94,14 +95,7 @@ ShaderTargetProfile GetShaderTargetProfile(const char *str, ShaderModuleVersion 
 
 // we read once to build dependency graph and cache
 void IterateHeaderFiles(const std::filesystem::path &path,
-                         Container::HashMap<std::filesystem::path, FileNode> &dependency_map, u64 in_node, bool is_leaf_node) {
-    // exist
-    auto it = dependency_map.find(path);
-    // ignore leaf
-    if (it != dependency_map.end() && !it->second.shader_path.has_value()) {
-        edge_list.emplace(std::make_pair(in_node, it->second.graph_node_index));
-        return;
-    }
+                        Container::HashMap<std::filesystem::path, FileNode> &dependency_map) {
     FileNode current_node;
     auto text = fs::read_text_file(Container::String{path.string()});
     // we use last write time instead of md5, but that might not accurate
@@ -115,14 +109,6 @@ void IterateHeaderFiles(const std::filesystem::path &path,
         fs::write_text_file(Container::String{cached_path.string()}, s_last_mod_time.data(),
                             s_last_mod_time.size() * sizeof(char));
     }
-    if (is_leaf_node) {
-        current_node.shader_path = path;
-    }
-    current_node.graph_node_index = node_index;
-    node_index_map.push_back(path);
-    dependency_map.emplace(path, std::move(current_node));
-    edge_list.emplace(std::make_pair(in_node, node_index));
-    node_index++;
 
     // the following code is generated from ChatGPT.
     std::regex reg{"#include\\s+[\"<](.*)[\">]"};
@@ -133,23 +119,28 @@ void IterateHeaderFiles(const std::filesystem::path &path,
         std::filesystem::path abs_include_path = path.parent_path() / match[1].str();
         // Move the search start to the end of the matched string
         search_start = match.suffix().first;
-        IterateHeaderFiles(std::filesystem::absolute(abs_include_path), dependency_map, node_index, false);
+        IterateHeaderFiles(std::filesystem::absolute(abs_include_path), dependency_map);
+        current_node.header_files.push_back(std::filesystem::absolute(abs_include_path));
     }
+    dependency_map.emplace(path, std::move(current_node));
+}
 
-    //std::sregex_iterator occurs(text.cbegin(), text.cend(), reg);
-    //// iterate parent header file
-    //for (std::sregex_iterator end; occurs != end; ++occurs) {
-    //    Container::String matched_str{occurs->str()};
-    //    auto pos = matched_str.find("\"") + 1;
-    //    matched_str = matched_str.substr(pos,
-    //                                     matched_str.length() - pos - 1); // remove #include " "
-    //    std::filesystem::path abs_include_path = path.parent_path() / matched_str.c_str();
-    //    IterateHeaderFiles(std::filesystem::absolute(abs_include_path), dependency_map, node_index, false);
-    //}
+bool NeedCompile(const std::filesystem::path &current_node_path,
+                 Container::HashSet<std::filesystem::path> &visited_vertices,
+                 Container::HashMap<std::filesystem::path, FileNode> &node_map) {
+
+    auto &current_node = node_map[current_node_path];
+    if (visited_vertices.find(current_node_path) != visited_vertices.end()) {
+        return current_node.need_compile;
+    }
+    for (auto &header : node_map[current_node_path].header_files) {
+        current_node.need_compile |= NeedCompile(header, visited_vertices, node_map);
+    }
+    visited_vertices.emplace(current_node_path);
+    return current_node.need_compile;
 }
 
 void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
-
     // create cached directory
     if (!std::filesystem::exists(cached_project_dir)) {
         std::filesystem::create_directory(cached_project_dir);
@@ -159,15 +150,20 @@ void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
     }
 
     // shader text map, value contains shader blob and cache stat.
-    Container::HashMap<std::filesystem::path, std::pair<Container::String, bool>> shader_texts(settings.shader_list.size());
+    Container::HashMap<std::filesystem::path, std::pair<Container::String, bool>> shader_texts(
+        settings.shader_list.size());
 
     for (auto &path : settings.shader_list) {
-        shader_texts.emplace(std::filesystem::absolute(path), std::make_pair(fs::read_text_file(path.string().c_str()),
-                                                                             true)); // TODO(hylu): handle file reading error
+        auto txt = fs::read_text_file(path.string().c_str());
+        if (txt.empty()) {
+            continue;
+        }
+        shader_texts.emplace(std::filesystem::absolute(path),
+                             std::make_pair(txt,
+                                            true)); // TODO(hylu): handle file reading error
     }
 
     // extract args from shader text for compiling
-    // each ShaderCompilationSetting
     Container::Array<ShaderCompilationSetting> shader_compilation_settings;
     for (auto &[path, text] : shader_texts) {
         std::regex entry{"[VPCHDM]S_MAIN"}; // vs, ps, cs, hs, ds, ms, TODO(hylu): rt
@@ -189,32 +185,17 @@ void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
 
     Container::HashMap<std::filesystem::path, FileNode> shader_node_map;
     // build shader dependency graph
+    // TODO(hylu): threading
     for (auto &[path, text] : shader_texts) {
-        IterateHeaderFiles(path, shader_node_map, node_index, true);
+        IterateHeaderFiles(path, shader_node_map);
     }
 
-    boost::adjacency_list<boost::setS, boost::vecS, boost::directedS> shader_dependency_graph(edge_list.begin(),
-                                                                                               edge_list.end(), edge_list.size());
-    // iterate graph
-    for (u32 idx = 0; idx < node_index_map.size(); idx++) {
-    
-        const auto &v = vertex(idx, shader_dependency_graph);
-        
+    // iterate depedency graph
+    // TODO(hylu): threading
+    Container::HashSet<std::filesystem::path> visited_vertices{};
+    for (auto shader : shader_compilation_settings) {
+        shader_texts[shader.path].second = NeedCompile(shader.path, visited_vertices, shader_node_map);
     }
-    //for () {
-    //    if (curretn_node.shader_path.has_value()) {
-
-    //        auto parent_path = shader_path;
-    //        shader_texts[parent_path].second &= curretn_node.need_compile;
-    //    }
-    //}
-
-#ifndef NDBUG
-    for (auto &idx : node_index_map) {
-        Container::String text = shader_node_map[idx].shader_path.has_value() ? "is leaf node" : "not leaf node";
-        LOG_INFO("{}, {}", idx.filename().string(), text);
-    }
-#endif // ! NDBUG
 
     // multithread shader compiling
     tbb::parallel_for(tbb::blocked_range<u32>(0, static_cast<u32>(shader_compilation_settings.size())),
@@ -222,8 +203,8 @@ void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
                           for (u32 v = r.begin(); v < r.end(); v++) {
                               auto &shader = shader_compilation_settings[v];
                               auto &[shader_text, need_compile] = shader_texts[shader.path];
-                              if (need_compile == true) {
-
+                              if (need_compile) {
+                                  LOG_INFO("compiling {}, {}", shader.path.string(), need_compile);
                                   ShaderCompiler::Compile(shader_text, shader.args);
                               }
                           }
@@ -238,7 +219,6 @@ void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
     //    ShaderCompiler::Compile(shader_texts[shader.path], shader.args);
     //}
 }
-
 
 void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const ShaderCompilationArgs &compile_args) {
     IDxcBlobEncoding *hlsl_blob{};
@@ -347,7 +327,6 @@ void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const S
     //shaderReflection->GetDesc(&shaderDesc);
 
     // release resources
-
 }
 
 } // namespace Horizon

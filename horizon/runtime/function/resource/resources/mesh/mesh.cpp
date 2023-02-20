@@ -11,9 +11,9 @@
 #include "runtime/function/rhi/rhi.h"
 #include "runtime/function/resource/resource_loader/texture/texture_loader.h"
 
-namespace Horizon {
-
 using namespace Assimp;
+
+namespace Horizon {
 
 Mesh::Mesh(const MeshDesc &desc,
            std::pmr::polymorphic_allocator<std::byte> allocator) noexcept

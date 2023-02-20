@@ -14,9 +14,9 @@
 
 // project headers
 
-namespace Horizon {
+using namespace Horizon::Input;
 
-using namespace Input;
+namespace Horizon {
 
 Camera::Camera(const CameraSetting &setting, const math::Vector3f &eye, const math::Vector3f &at,
                const math::Vector3f &up) noexcept
@@ -74,22 +74,22 @@ f32 Camera::GetCameraSpeed() const noexcept {
 
 void Camera::Move(Direction direction) noexcept {
     switch (direction) {
-    case Horizon::Direction::FORWARD:
+    case Direction::FORWARD:
         m_eye += GetCameraSpeed() * m_forward;
         break;
-    case Horizon::Direction::BACKWARD:
+    case Direction::BACKWARD:
         m_eye -= GetCameraSpeed() * m_forward;
         break;
-    case Horizon::Direction::RIGHT:
+    case Direction::RIGHT:
         m_eye += GetCameraSpeed() * m_right;
         break;
-    case Horizon::Direction::LEFT:
+    case Direction::LEFT:
         m_eye -= GetCameraSpeed() * m_right;
         break;
-    case Horizon::Direction::UP:
+    case Direction::UP:
         m_eye += GetCameraSpeed() * m_up;
         break;
-    case Horizon::Direction::DOWN:
+    case Direction::DOWN:
         m_eye -= GetCameraSpeed() * m_up;
         break;
     default:

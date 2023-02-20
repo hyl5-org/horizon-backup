@@ -11,9 +11,10 @@
 #include <fstream>
 #include <string>
 #include <unordered_set>
-namespace TEST::ShaderCompilationTest {
 
 using namespace Horizon;
+
+namespace TEST::ShaderCompilationTest {
 
 class ShaderCompilationTest {
  public:
@@ -22,6 +23,7 @@ class ShaderCompilationTest {
  public:
 };
 
+// shader incremental compile
 TEST_CASE_FIXTURE(ShaderCompilationTest, "dependency") {
    ShaderCompilationSettings settings{};
    settings.input_dir = "C:/FILES/horizon/horizon/assets/hlsl";
@@ -39,11 +41,8 @@ TEST_CASE_FIXTURE(ShaderCompilationTest, "dependency") {
    list.push_back("C:/FILES/horizon/horizon/assets/hlsl/gpu_mesh_culling.comp.hlsl");
    list.push_back("C:/FILES/horizon/horizon/assets/hlsl/gpu_triangle_culling.comp.hlsl");
    list.push_back("C:/FILES/horizon/horizon/assets/hlsl/compact_index_buffer.comp.hlsl");
-   list.push_back("C:/FILES/horizon/horizon/assets/hlsl/test0.comp.hlsl");
-   for (u32 i = 0; i < 303; i++) {
-       std::string path = "C:/FILES/horizon/horizon/assets/hlsl/test0.comp copy " + std::to_string(i) + ".hlsl";
-       //list.push_back(path);
-   }
+
+
    settings.shader_list = std::move(list);
 
    auto tp1 = std::chrono::high_resolution_clock::now();

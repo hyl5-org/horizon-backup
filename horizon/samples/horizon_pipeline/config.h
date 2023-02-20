@@ -24,7 +24,6 @@
 
 #include <runtime/system/render/RenderSystem.h>
 
-
 using namespace Horizon;
 using namespace Horizon::Backend;
 
