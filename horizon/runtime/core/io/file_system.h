@@ -32,8 +32,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "runtime/core/utils/definations.h"
 #include "runtime/core/container/container.h"
+#include "runtime/core/utils/definations.h"
 
 namespace Horizon::fs {
 
@@ -56,7 +56,7 @@ enum Type {
     Temp
 };
 
-extern const Container::HashMap<Type, Container::String> relative_paths;
+extern const Container::HashMap<Type, std::filesystem::path> relative_paths;
 
 /**
  * @brief Gets the absolute path of a given type or a specific file
@@ -65,7 +65,7 @@ extern const Container::HashMap<Type, Container::String> relative_paths;
  * @throws runtime_error if the platform didn't initialize each path properly, path wasn't found or the path was found but is empty
  * @return Path to the directory of a certain type
  */
-const Container::String get(const Type type, const Container::String &file = "");
+const std::filesystem::path get(const Type type, const std::filesystem::path &file = "");
 } // namespace path
 
 /**
@@ -73,27 +73,27 @@ const Container::String get(const Type type, const Container::String &file = "")
  * @param path A path to a directory
  * @return True if the path points to a valid directory, false if not
  */
-bool is_directory(const Container::String &path);
+bool is_directory(const std::filesystem::path &path);
 
 /** 
  * @brief Checks if a file exists
  * @param filename The filename to check
  * @return True if the path points to a valid file, false if not
  */
-bool is_file(const Container::String &filename);
+bool is_file(const std::filesystem::path &filename);
 
 /**
  * @brief Platform specific implementation to create a directory
  * @param path A path to a directory
  */
-void create_directory(const Container::String &path);
+void create_directory(const std::filesystem::path &path);
 
 /**
  * @brief Recursively creates a directory
  * @param root The root directory that the path is relative to
  * @param path A path in the format 'this/is/an/example/path/'
  */
-void create_path(const Container::String &root, const Container::String &path);
+void create_path(const std::filesystem::path &root, const std::filesystem::path &path);
 
 /**
  * @brief Helper to read an asset file into a byte-array
@@ -103,7 +103,7 @@ void create_path(const Container::String &root, const Container::String &path);
  * of the file will be used.
  * @return A vector filled with data read from the file
  */
-Container::Array<u8> read_asset(const Container::String &filename, const u32 count = 0);
+Container::Array<u8> read_asset(const std::filesystem::path &filename, const u32 count = 0);
 
 /**
  * @brief Helper to read a shader file into a single string
@@ -111,7 +111,7 @@ Container::Array<u8> read_asset(const Container::String &filename, const u32 cou
  * @param filename The path to the file (relative to the assets directory)
  * @return A string of the text in the shader file
  */
-Container::String read_shader(const Container::String &filename);
+Container::String read_shader(const std::filesystem::path &filename);
 
 /**
  * @brief Helper to read a shader file into a byte-array
@@ -119,7 +119,7 @@ Container::String read_shader(const Container::String &filename);
  * @param filename The path to the file (relative to the assets directory)
  * @return A vector filled with data read from the file
  */
-Container::Array<u8> read_shader_binary(const Container::String &filename);
+Container::Array<u8> read_shader_binary(const std::filesystem::path &filename);
 
 /**
  * @brief Helper to read a temporary file into a byte-array
@@ -129,7 +129,7 @@ Container::Array<u8> read_shader_binary(const Container::String &filename);
  * of the file will be used.
  * @return A vector filled with data read from the file
  */
-Container::Array<u8> read_temp(const Container::String &filename, const u32 count = 0);
+Container::Array<u8> read_temp(const std::filesystem::path &filename, const u32 count = 0);
 
 /**
  * @brief Helper to write to a file in temporary storage
@@ -139,7 +139,7 @@ Container::Array<u8> read_temp(const Container::String &filename, const u32 coun
  * @param count (optional) How many bytes to write. If 0 or not specified, the size
  * of data will be used.
  */
-void write_temp(const Container::Array<u8> &data, const Container::String &filename, const u32 count = 0);
+void write_temp(const Container::Array<u8> &data, const std::filesystem::path &filename, const u32 count = 0);
 
 /**
  * @brief Helper to write to a png image in permanent storage
@@ -151,7 +151,7 @@ void write_temp(const Container::Array<u8> &data, const Container::String &filen
  * @param components The number of bytes per element
  * @param row_stride The stride in bytes of a row of pixels
  */
-void write_image(const u8 *data, const Container::String &filename, const u32 width, const u32 height,
+void write_image(const u8 *data, const std::filesystem::path &filename, const u32 width, const u32 height,
                  const u32 components, const u32 row_stride);
 
 /**
@@ -160,12 +160,11 @@ void write_image(const u8 *data, const Container::String &filename, const u32 wi
  * @param data A json object
  * @param filename The name of the file
  */
-bool write_json(nlohmann::json &data, const Container::String &filename);
-
+bool write_json(nlohmann::json &data, const std::filesystem::path &filename);
 
 Container::String read_text_file(const std::filesystem::path filename);
 
-Container::Array<u8> read_binary_file(const Container::String &filename, const uint32_t count);
+Container::Array<u8> read_binary_file(const std::filesystem::path &filename, const uint32_t count = 0);
 
 void write_text_file(const std::filesystem::path filename, void *data, u64 size);
 

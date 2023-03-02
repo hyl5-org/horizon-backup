@@ -5,7 +5,7 @@
 SceneData::SceneData(SceneManager *scene_manager, Backend::RHI *rhi) noexcept {
     m_scene_manager = scene_manager;
 
-    scene_manager->CreateBuiltInResources(rhi);
+    scene_manager->CreateBuiltInResources();
 
     auto [camera, controller] = m_scene_manager->AddCamera(CameraSetting{ProjectionMode::PERSPECTIVE, CameraType::FLY, true}, math::Vector3f(0.0, 0.0, 10.0_m),
                                              math::Vector3f(0.0, 0.0, 0.0),
@@ -40,13 +40,13 @@ SceneData::SceneData(SceneManager *scene_manager, Backend::RHI *rhi) noexcept {
     scene_manager->AddMesh(sphere);
     //scene_manager->AddMesh(tree1);
 
-    scene_manager->CreateMeshResources(rhi);
+    scene_manager->CreateMeshResources();
 
     auto decal02 = scene_manager->resource_manager->LoadDecal(asset_path / "materials/decals/decal02.json");
 
     scene_manager->AddDecal(decal02);
 
-    scene_manager->CreateDecalResources(rhi);
+    scene_manager->CreateDecalResources();
     // light
 
     std::random_device seed;
@@ -73,6 +73,6 @@ SceneData::SceneData(SceneManager *scene_manager, Backend::RHI *rhi) noexcept {
     scene_manager->AddDirectionalLight(math::Vector3f(1.0, 1.0, 1.0), 120000.0_lux, math::Vector3f(0.0, 0.0, -1.0));
 
     
-    scene_manager->CreateLightResources(rhi);
-    scene_manager->CreateCameraResources(rhi);
+    scene_manager->CreateLightResources();
+    scene_manager->CreateCameraResources();
 }

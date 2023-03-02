@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 
 project(Horizon)
-
+include(C:/FILES/vcpkg/scripts/buildsystems/vcpkg.cmake)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 

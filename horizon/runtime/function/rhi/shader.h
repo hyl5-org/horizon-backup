@@ -9,7 +9,7 @@
 namespace Horizon::Backend {
 class Shader {
   public:
-    Shader(ShaderType type, const std::filesystem::path &rsd_path) noexcept;
+    Shader(ShaderType type) noexcept;
     virtual ~Shader() noexcept = default;
 
     Shader(const Shader &rhs) noexcept = delete;
@@ -19,10 +19,10 @@ class Shader {
 
     ShaderType GetType() const noexcept;
 
-    const std::filesystem::path &GetRootSignatureDescriptionPath() const noexcept { return m_rsd_path; }
+    //const std::filesystem::path &GetRootSignatureDescriptionPath() const noexcept { return m_rsd_path; }
   protected:
     const ShaderType m_type{};
-    const std::filesystem::path m_rsd_path; // lazy read
+    //const std::filesystem::path m_rsd_path; // lazy read
 
 
 };

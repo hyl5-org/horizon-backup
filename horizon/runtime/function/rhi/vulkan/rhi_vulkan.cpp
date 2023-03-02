@@ -71,12 +71,8 @@ SwapChain *RHIVulkan::CreateSwapChain(const SwapChainCreateInfo &create_info) {
     return Memory::Alloc<VulkanSwapChain>(m_vulkan, create_info, m_window);
 }
 
-Shader *RHIVulkan::CreateShader(ShaderType type, const std::filesystem::path &file_name) {
-    auto _shader_bin_path = file_name.parent_path() / "bin" / "VULKAN" / file_name.filename();
-    auto spirv_code = fs::read_binary_file(_shader_bin_path.generic_string().c_str(), 1);
-    auto rsd_path = file_name.parent_path() / "generated" / "rsd" / file_name.filename();
-    rsd_path += ".rsd";
-    return Memory::Alloc<VulkanShader>(m_vulkan, type, spirv_code, rsd_path);
+Shader *RHIVulkan::CreateShader(ShaderType type, const Container::Array<u8>& shader_binary_code) {
+    return Memory::Alloc<VulkanShader>(m_vulkan, type, shader_binary_code);
 }
 
 void RHIVulkan::DestroyShader(Shader *shader_program) {

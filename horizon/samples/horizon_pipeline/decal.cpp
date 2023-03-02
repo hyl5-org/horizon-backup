@@ -1,8 +1,10 @@
 #include "decal.h"
 
+extern Container::HashMap<ShaderList, Container::Array<u8>> shader_map;
+
 DecalData::DecalData(Backend::RHI *rhi, SceneManager *scene_manager, GeometryData *geometry_data) noexcept {
-    decal_vs = rhi->CreateShader(ShaderType::VERTEX_SHADER, 0, asset_path / "shaders/decal.vert.hsl");
-    decal_ps = rhi->CreateShader(ShaderType::PIXEL_SHADER, 0, asset_path / "shaders/decal.frag.hsl");
+    decal_vs = rhi->CreateShader(ShaderType::VERTEX_SHADER, shader_map[ShaderList::GEOMETRY_VS]);
+    decal_ps = rhi->CreateShader(ShaderType::PIXEL_SHADER, shader_map[ShaderList::GEOMETRY_PS]);
 
     GraphicsPipelineCreateInfo graphics_pass_ci{};
     graphics_pass_ci.vertex_input_state.attribute_count = 5;

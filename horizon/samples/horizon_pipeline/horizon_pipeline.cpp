@@ -1,5 +1,9 @@
 #include "horizon_pipeline.h"
 
+#include "runtime/core/io/file_system.h"
+
+Container::HashMap<ShaderList, Container::Array<u8>> shader_map;
+
 void HorizonPipeline::InitAPI() {
     rhi = engine->m_render_system->GetRhi();
 }
@@ -7,6 +11,43 @@ void HorizonPipeline::InitAPI() {
 void HorizonPipeline::InitResources() { InitPipelineResources(); }
 
 void HorizonPipeline::InitPipelineResources() {
+    // load pipeline resources
+
+    {
+        // read_file
+        std::filesystem::path hsb_path = asset_path / "hlsl/generated";
+
+        if (auto hsb = fs::read_binary_file(hsb_path / "compact_index_buffer.comp.hlsl.CS.hsb"); !hsb.empty()) {
+            shader_map.emplace(ShaderList::COMPACT_INDEX_BUFFER_CS, std::move(hsb));
+        }
+        if (auto hsb = fs::read_binary_file(hsb_path / "shading.comp.hlsl.CS.hsb"); !hsb.empty()) {
+            shader_map.emplace(ShaderList::SHADING_CS, std::move(hsb));
+        }
+        if (auto hsb = fs::read_binary_file(hsb_path / "ssao.comp.hlsl.CS.hsb"); !hsb.empty()) {
+            shader_map.emplace(ShaderList::SSAO_CS, std::move(hsb));
+        }
+        if (auto hsb = fs::read_binary_file(hsb_path / "ssao_blur.comp.hlsl.CS.hsb"); !hsb.empty()) {
+            shader_map.emplace(ShaderList::SSAO_BLUR_CS, std::move(hsb));
+        }
+        if (auto hsb = fs::read_binary_file(hsb_path / "taa.comp.hlsl.CS.hsb"); !hsb.empty()) {
+            shader_map.emplace(ShaderList::TAA_CS, std::move(hsb));
+        }
+        if (auto hsb = fs::read_binary_file(hsb_path / "gpu_mesh_culling.comp.hlsl.CS.hsb"); !hsb.empty()) {
+            shader_map.emplace(ShaderList::GPU_MESH_CULLING_CS, std::move(hsb));
+        }
+        if (auto hsb = fs::read_binary_file(hsb_path / "gpu_triangle_culling.comp.hlsl.CS.hsb"); !hsb.empty()) {
+            shader_map.emplace(ShaderList::GPU_TRIANGLE_CULLING_CS, std::move(hsb));
+        }
+        if (auto hsb = fs::read_binary_file(hsb_path / "post_process.comp.hlsl.CS.hsb"); !hsb.empty()) {
+            shader_map.emplace(ShaderList::POST_PROCESS_CS, std::move(hsb));
+        }
+        if (auto hsb = fs::read_binary_file(hsb_path / "geometry.gfx.hlsl.VS.hsb"); !hsb.empty()) {
+            shader_map.emplace(ShaderList::GEOMETRY_VS, std::move(hsb));
+        }
+        if (auto hsb = fs::read_binary_file(hsb_path / "geometry.gfx.hlsl.PS.hsb"); !hsb.empty()) {
+            shader_map.emplace(ShaderList::GEOMETRY_PS, std::move(hsb));
+        }
+    }
 
     swap_chain = rhi->CreateSwapChain(SwapChainCreateInfo{2});
 
@@ -23,11 +64,11 @@ void HorizonPipeline::InitPipelineResources() {
         sampler = rhi->CreateSampler(sampler_desc);
     }
 
-    geometry = Memory::MakeUnique<GeometryData>(rhi);
+    post_process = Memory::MakeUnique<PostProcessData>(rhi);
     shading = Memory::MakeUnique<ShadingData>(rhi);
+    geometry = Memory::MakeUnique<GeometryData>(rhi);
     decal = Memory::MakeUnique<DecalData>(rhi, nullptr, geometry.get());
     ssao = Memory::MakeUnique<SSAOData>(rhi);
-    post_process = Memory::MakeUnique<PostProcessData>(rhi);
     antialiasing = Memory::MakeUnique<TAAData>(rhi);
     scene = Memory::MakeUnique<SceneData>(engine->m_render_system->GetSceneManager(), rhi);
 }
@@ -49,8 +90,8 @@ void HorizonPipeline::UpdatePipelineResources() {
     proj.at(0, 2) += offset_x;
     proj.at(1, 2) += offset_y;
 
-    auto vp = view * proj;
-    auto inverse_vp = vp.Invert();
+    auto vp = proj * view;
+    auto inverse_vp = math::Invert(vp);
 
     scene->m_scene_manager->camera_ub.prev_vp = scene->m_scene_manager->camera_ub.vp;
     scene->m_scene_manager->camera_ub.vp = vp;
@@ -71,7 +112,7 @@ void HorizonPipeline::UpdatePipelineResources() {
     post_process->exposure_constants.exposure_ev100__ = math::Vector4f(cam->GetExposure(), cam->GetEv100(), 0.0, 0.0);
 
 
-    ssao->ssao_constansts.inv_proj = proj.Invert();
+    ssao->ssao_constansts.inv_proj = math::Invert(proj);
     ssao->ssao_constansts.noise_scale_x = _width / SSAOData::SSAO_NOISE_TEX_WIDTH;
     ssao->ssao_constansts.noise_scale_y = _height / SSAOData::SSAO_NOISE_TEX_HEIGHT;
 

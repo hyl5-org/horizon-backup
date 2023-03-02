@@ -1,4 +1,5 @@
 #include "geometry.h"
+extern Container::HashMap<ShaderList, Container::Array<u8>> shader_map;
 
 GeometryData::GeometryData(RHI *rhi) noexcept {
 
@@ -88,14 +89,14 @@ GeometryData::GeometryData(RHI *rhi) noexcept {
 
         geometry_pass = rhi->CreateGraphicsPipeline(graphics_pass_ci);
     }
-
+     
     {
-        geometry_vs = rhi->CreateShader(ShaderType::VERTEX_SHADER, 0, asset_path / "shaders/geometry.vert.hsl");
+        geometry_vs = rhi->CreateShader(ShaderType::VERTEX_SHADER, shader_map[ShaderList::GEOMETRY_VS]);
 
-        geometry_ps = rhi->CreateShader(ShaderType::PIXEL_SHADER, 0, asset_path / "shaders/geometry.frag.hsl");
+        geometry_ps = rhi->CreateShader(ShaderType::PIXEL_SHADER, shader_map[ShaderList::GEOMETRY_PS]);
+
+        geometry_pass->SetGraphicsShader(geometry_vs, geometry_ps);
     }
-
-    geometry_pass->SetGraphicsShader(geometry_vs, geometry_ps);
 }
 
 GeometryData::~GeometryData() noexcept {}

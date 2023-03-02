@@ -1,9 +1,10 @@
 #include "ssao.h"
+extern Container::HashMap<ShaderList, Container::Array<u8>> shader_map;
 
 SSAOData::SSAOData(Backend::RHI *rhi) noexcept {
 
-    ssao_cs = rhi->CreateShader(ShaderType::COMPUTE_SHADER, 0, asset_path / "shaders/ssao.comp.hsl");
-    ssao_blur_cs = rhi->CreateShader(ShaderType::COMPUTE_SHADER, 0, asset_path / "shaders/ssao_blur.comp.hsl");
+    ssao_cs = rhi->CreateShader(ShaderType::COMPUTE_SHADER, shader_map[ShaderList::SSAO_CS]);
+    ssao_blur_cs = rhi->CreateShader(ShaderType::COMPUTE_SHADER, shader_map[ShaderList::SSAO_BLUR_CS]);
 
     // AO PASS
     {
@@ -33,11 +34,11 @@ SSAOData::SSAOData(Backend::RHI *rhi) noexcept {
 
     for (unsigned int i = 0; i < SSAO_KERNEL_SIZE; ++i) {
         math::Vector3f sample(rnd_dist(generator) * 2.0 - 1.0, rnd_dist(generator) * 2.0 - 1.0, rnd_dist(generator));
-        sample.Normalize();
+        sample = math::Normalize(sample);
         sample *= rnd_dist(generator);
         float scale = float(i) / float(SSAO_KERNEL_SIZE);
         sample *= Lerp(0.1f, 1.0f, scale * scale);
-        ssao_constansts.kernels[i] = math::Vector4f(sample);
+        ssao_constansts.kernels[i] = math::Vector4f(sample, 1.0);
     }
     // ssao noise tex
     for (u32 i = 0; i < ssao_noise_tex_val.size(); i++) {

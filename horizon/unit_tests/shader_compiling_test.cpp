@@ -12,6 +12,9 @@
 #include <string>
 #include <unordered_set>
 
+#include <spirv_cross/spirv_reflect.hpp>
+#include <spirv_cross/spirv_cross.hpp>
+
 using namespace Horizon;
 
 namespace TEST::ShaderCompilationTest {
@@ -28,8 +31,8 @@ TEST_CASE_FIXTURE(ShaderCompilationTest, "dependency") {
    ShaderCompilationSettings settings{};
    settings.input_dir = "C:/FILES/horizon/horizon/assets/hlsl";
    settings.output_dir = "C:/FILES/horizon/horizon/assets/hlsl/generated";
-   settings.optimization_level = ShaderOptimizationLevel::DEBUG;
-   settings.sm_version = ShaderModuleVersion::SM_6_6;
+   settings.optimization_level = ShaderOptimizationLevel::O3;
+   settings.sm_version = ShaderModuleVersion::SM_6_0;
    settings.target_api = ShaderTargetAPI::SPIRV;
    Container::Array<std::filesystem::path> list;
    list.push_back("C:/FILES/horizon/horizon/assets/hlsl/ssao.comp.hlsl");
@@ -44,13 +47,18 @@ TEST_CASE_FIXTURE(ShaderCompilationTest, "dependency") {
 
 
    settings.shader_list = std::move(list);
-
+   settings.force_recompile = true;
    auto tp1 = std::chrono::high_resolution_clock::now();
    ShaderCompiler::CompileShaders(settings);
    auto tp2 = std::chrono::high_resolution_clock::now();
    auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(tp2 - tp1).count();
 
    LOG_INFO("spend {} ms to copmile {} shader", dur, settings.shader_list.size());
+
+   auto spvcode = fs::read_binary_file("C:/FILES/horizon/horizon/assets/hlsl/generated/post_process.comp.hlsl.CS.hsb");
+
+   spirv_cross::Compiler compiler((u32*)spvcode.data(), spvcode.size());
+   auto rest = compiler.get_shader_resources();
    // threading
 }
 

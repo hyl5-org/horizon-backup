@@ -1,5 +1,6 @@
 #pragma once
 
+#include "runtime/core/container/container.h"
 #include "runtime/function/rhi/pipeline.h"
 #include "runtime/function/rhi/shader.h"
 #include "runtime/function/rhi/vulkan/vulkan_descriptor_set.h"
@@ -27,13 +28,16 @@ class VulkanPipeline : public Pipeline {
 
     DescriptorSet *GetDescriptorSet(ResourceUpdateFrequency frequency) override;
 
-    const RootSignatureDesc &GetRootSignatureDesc() const noexcept { return rsd; }
-    
+    //const RootSignatureDesc &GetRootSignatureDesc() const noexcept { return rsd; }
+    Container::HashMap<Container::String, VkDescriptorSetLayoutBinding>
+    GetDescriptorSetLayoutBinding(ResourceUpdateFrequency frequency) noexcept;
   private:
     void CreateGraphicsPipeline();
     void CreateComputePipeline();
     void CreatePipelineLayout();
 
+    // void ParseRootSignatureFromShader(
+    //     VulkanShader *shader, ResourceUpdateFrequency frequency);  
     // void CreateRTPipeline() noexcept;
   public:
     const VulkanRendererContext &m_context{};

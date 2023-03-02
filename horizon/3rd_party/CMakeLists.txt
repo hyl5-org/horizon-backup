@@ -35,9 +35,18 @@ target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 # target_link_libraries(${PROJECT_NAME} PUBLIC Microsoft::DirectXTK12)
 
 
+add_subdirectory(SPIRV-Cross)
+target_link_libraries(${PROJECT_NAME} PRIVATE spirv-cross-core spirv-cross-reflect)
+
 # directx shader compiler
-find_package(directx-dxc REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC Microsoft::DirectXShaderCompiler)
+# find_package(directx-dxc REQUIRED)
+# target_link_directories(${PROJECT_NAME} PUBLIC )
+
+# target_link_libraries(${PROJECT_NAME} PUBLIC dxc)
+# find_package(directx-dxc REQUIRED)
+target_include_directories(${PROJECT_NAME} PUBLIC DirectXShaderCompiler/include)
+target_link_directories(${PROJECT_NAME} PUBLIC DirectXShaderCompiler/lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/DirectXShaderCompiler/lib/dxcompiler.lib)
 
 # spdlog
 find_package(spdlog REQUIRED)
@@ -86,4 +95,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json)
 
 find_package(cryptopp CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE cryptopp::cryptopp)
+
+# find_package(unofficial-spirv-reflect CONFIG REQUIRED)
+# target_link_libraries(${PROJECT_NAME} PRIVATE unofficial::spirv-reflect::spirv-reflect)
 

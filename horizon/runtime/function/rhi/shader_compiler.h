@@ -21,6 +21,15 @@
 
 namespace Horizon {
 
+constexpr Container::FixedArray<char, 4> hsb_header{'h', 's', 'b', '1'};
+
+struct ShaderBinaryHeader {
+    Container::FixedArray<char, 4> header;
+    u32 shader_blob_offset;
+    u32 shader_blob_size;
+    //u32 pdb_offset;
+};
+
 class ShaderCompiler : public Singleton<ShaderCompiler> {
   public:
     ShaderCompiler() noexcept;

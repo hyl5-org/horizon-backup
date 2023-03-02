@@ -1,15 +1,11 @@
 #include "shader.h"
 
-#include <utility>
 #include <algorithm>
-
-#include <nlohmann/json.hpp>
+#include <utility>
 
 namespace Horizon::Backend {
 
-Shader::Shader(ShaderType type, const std::filesystem::path& rsd_path) noexcept : m_type(type), m_rsd_path(rsd_path) {
-
-}
+Shader::Shader(ShaderType type) noexcept : m_type(type) {}
 
 ShaderType Shader::GetType() const noexcept { return m_type; }
 

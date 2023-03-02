@@ -1,10 +1,6 @@
-#include "include/common/bindless.hlsl"
-#include "include/postprocess/postprocess.hlsl"
-#include "include/shading/ibl.hlsl"
-#include "include/shading/light_defination.hlsl"
-#include "include/shading/lighting.hlsl"
-#include "include/shading/material_params_defination.hlsl"
 #include "include/common/descriptor.hlsl"
+#include "include/common/common_math.hlsl"
+#include "include/shading/material_params_defination.hlsl"
 
 RES(Texture2D<float4>, material_textures[], UPDATE_FREQ_BINDLESS);
 RES(StructuredBuffer<MaterialDescription>, material_descriptions[], UPDATE_FREQ_PER_FRAME);
@@ -99,28 +95,28 @@ VSOutput VS_MAIN( VSInput vsin, uint instance_id : SV_InstanceID, uint vertex_id
 {
     
     VSOutput vsout;
-    uint mesh_id;
-    mesh_id = draw_id;
-    mesh_id += mesh_id_offset;
-    float4x4 model = instance_parameter[mesh_id].model_matrix;
+    // uint mesh_id;
+    // mesh_id = draw_id;
+    // mesh_id += mesh_id_offset;
+    // float4x4 model = instance_parameter[mesh_id].model_matrix;
 
-    // float vbp[VERETX_LAYOUT_STRIDE] = (vertex_buffers)[0][mesh_id + vertex_id].packed;
-    // vsin.position = GetVertexPositionFromPackedVertexBuffer(vbp);
-    // vsin.normal = GetVertexNormalFromPackedVertexBuffer(vbp);
-    // vsin.uv0 = GetVertexUv0FromPackedVertexBuffer(vbp);
-    // vsin.uv1 = GetVertexUv1FromPackedVertexBuffer(vbp);
-    // vsin.tangent = GetVertexTangentFromPackedVertexBuffer(vbp);
+    // // float vbp[VERETX_LAYOUT_STRIDE] = (vertex_buffers)[0][mesh_id + vertex_id].packed;
+    // // vsin.position = GetVertexPositionFromPackedVertexBuffer(vbp);
+    // // vsin.normal = GetVertexNormalFromPackedVertexBuffer(vbp);
+    // // vsin.uv0 = GetVertexUv0FromPackedVertexBuffer(vbp);
+    // // vsin.uv1 = GetVertexUv1FromPackedVertexBuffer(vbp);
+    // // vsin.tangent = GetVertexTangentFromPackedVertexBuffer(vbp);
     
-    vsout.position = mul(camera_view_projection, mul(model, float4(vsin.position, 1.0)));
-    vsout.world_pos = mul(model, float4(vsin.position, 1.0)).xyz;
-    //transpose(inverse(model)
-    vsout.normal = normalize(mul(model, float4(vsin.normal, 0.0)).xyz);
-    vsout.uv = vsin.uv0;
-    vsout.tangent = normalize(mul(model, float4(vsin.tangent, 0.0)).xyz);
-    vsout.instance_id = instance_id;
-    vsout.material_id = instance_parameter[mesh_id].material_id;
-    vsout.prev_pos = mul(camera_prev_view_projection, mul(model, float4(vsin.position, 1.0))); // old
-    vsout.curr_pos = mul(camera_view_projection, mul(model, float4(vsin.position, 1.0))); // new
+    // vsout.position = mul(camera_view_projection, mul(model, float4(vsin.position, 1.0)));
+    // vsout.world_pos = mul(model, float4(vsin.position, 1.0)).xyz;
+    // //transpose(inverse(model)
+    // vsout.normal = normalize(mul(model, float4(vsin.normal, 0.0)).xyz);
+    // vsout.uv = vsin.uv0;
+    // vsout.tangent = normalize(mul(model, float4(vsin.tangent, 0.0)).xyz);
+    // vsout.instance_id = instance_id;
+    // vsout.material_id = instance_parameter[mesh_id].material_id;
+    // vsout.prev_pos = mul(camera_prev_view_projection, mul(model, float4(vsin.position, 1.0))); // old
+    // vsout.curr_pos = mul(camera_view_projection, mul(model, float4(vsin.position, 1.0))); // new
     return vsout;
 }
 

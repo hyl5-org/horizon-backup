@@ -489,17 +489,17 @@ void VulkanCommandList::BindPipeline(Pipeline *pipeline) {
 }
 
 void VulkanCommandList::BindPushConstant(Pipeline *pipeline, const Container::String &name, void *data) {
-    assert(is_recoring == true);
-    assert(m_type != CommandQueueType::TRANSFER);
-    auto vk_pipeline = reinterpret_cast<VulkanPipeline *>(pipeline);
-    auto res = vk_pipeline->GetRootSignatureDesc().push_constants.find(name);
-    if (res == vk_pipeline->GetRootSignatureDesc().push_constants.end()) {
-        LOG_ERROR("pipeline doesn't have push constant {}", name);
-        return;
-    } else {
-        vkCmdPushConstants(m_command_buffer, vk_pipeline->m_pipeline_layout,
-                           ToVkShaderStageFlags(res->second.shader_stages), res->second.offset, res->second.size, data);
-    }
+    //assert(is_recoring == true);
+    //assert(m_type != CommandQueueType::TRANSFER);
+    //auto vk_pipeline = reinterpret_cast<VulkanPipeline *>(pipeline);
+    //auto res = vk_pipeline->GetRootSignatureDesc().push_constants.find(name);
+    //if (res == vk_pipeline->GetRootSignatureDesc().push_constants.end()) {
+    //    LOG_ERROR("pipeline doesn't have push constant {}", name);
+    //    return;
+    //} else {
+    //    vkCmdPushConstants(m_command_buffer, vk_pipeline->m_pipeline_layout,
+    //                       ToVkShaderStageFlags(res->second.shader_stages), res->second.offset, res->second.size, data);
+    //}
 }
 
 //void VulkanCommandList::BindPushConstant(Pipeline *pipeline, u32 index, void *data) {}

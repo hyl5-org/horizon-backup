@@ -18,9 +18,9 @@
 #include "file_system.h"
 
 #include <fstream>
+#include <iostream>
 #include <istream>
 #include <ostream>
-#include <iostream>
 #include <sstream>
 
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -32,20 +32,20 @@ namespace Horizon::fs {
 
 namespace path {
 
-static Container::String external_storage_directory;
+static std::filesystem::path external_storage_directory;
 
-static Container::String temp_directory;
+static std::filesystem::path temp_directory;
 
-static const Container::String &get_external_storage_directory() { return external_storage_directory; }
+static const std::filesystem::path &get_external_storage_directory() { return external_storage_directory; }
 
-static const Container::String &get_temp_directory() { return temp_directory; }
+static const std::filesystem::path &get_temp_directory() { return temp_directory; }
 
-const Container::HashMap<Type, Container::String> relative_paths = {
+const Container::HashMap<Type, std::filesystem::path> relative_paths = {
     {Type::Assets, "assets/"},    {Type::Shaders, "shaders/"},
     {Type::Storage, "output/"},   {Type::Screenshots, "output/images/"},
     {Type::Logs, "output/logs/"}, {Type::Graphs, "output/graphs/"}};
 
-const Container::String get(const Type type, const Container::String &file) {
+const std::filesystem::path get(const Type type, const std::filesystem::path &file) {
     assert(relative_paths.size() == Type::TotalRelativePathTypes &&
            "Not all paths are defined in filesystem, please check that each enum is specified");
 
@@ -67,43 +67,34 @@ const Container::String get(const Type type, const Container::String &file) {
         throw std::runtime_error("Path was found, but it is empty");
     }
 
-    auto path = get_external_storage_directory() + it->second;
+    auto path = get_external_storage_directory() / it->second;
 
-    if (!is_directory(path)) {
+    if (fs::is_directory(path)!=false) {
         create_path(get_external_storage_directory(), it->second);
     }
 
-    return path + file;
+    return path / file;
 }
 
 } // namespace path
 
-bool is_directory(const Container::String &path) {
-    struct stat info;
-    if (stat(path.c_str(), &info) != 0) {
-        return false;
-    } else if (info.st_mode & S_IFDIR) {
-        return true;
-    } else {
-        return false;
+bool is_directory(const std::filesystem::path &path) { return std::filesystem::is_directory(path); }
+
+void create_directory(const std::filesystem::path &path) {
+    if (fs::is_directory(path) != false) {
+        std::filesystem::create_directory(path);
     }
 }
 
-void create_directory(const Container::String &path) {
-    if (!is_directory(path)) {
-        CreateDirectory(path.c_str(), NULL);
-    }
-}
+bool is_file(const std::filesystem::path &filename) { return std::filesystem::is_regular_file(filename); }
 
-bool is_file(const Container::String &filename) {
-    std::ifstream f(filename.c_str());
-    return !f.fail();
-}
-
-void create_path(const Container::String &root, const Container::String &path) {
-    for (auto it = path.begin(); it != path.end(); ++it) {
-        it = std::find(it, path.end(), '/');
-        create_directory(root + Container::String(path.begin(), it));
+void create_path(const std::filesystem::path &root, const std::filesystem::path &path) {
+    auto str = path.string();
+    for (auto it = str.begin(); it != str.end(); ++it) {
+        it = std::find(it, path.string().end(), '/');
+        auto dir_path = (str.begin(), it);
+        std::filesystem::path out_path = root / dir_path;
+        fs::create_directory(out_path);
     }
 }
 
@@ -122,7 +113,7 @@ Container::String read_text_file(const std::filesystem::path filename) {
     return Container::String{(std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>())};
 }
 
-Container::Array<u8> read_binary_file(const Container::String &filename, const uint32_t count) {
+Container::Array<u8> read_binary_file(const std::filesystem::path &filename, const uint32_t count) {
     Container::Array<u8> data;
 
     std::ifstream file;
@@ -130,7 +121,7 @@ Container::Array<u8> read_binary_file(const Container::String &filename, const u
     file.open(filename, std::ios::in | std::ios::binary);
 
     if (!file.is_open()) {
-        LOG_ERROR("Failed to open file : {}", filename.c_str());
+        LOG_ERROR("Failed to open file : {}", filename.string());
         return {};
     }
 
@@ -161,14 +152,14 @@ void write_text_file(const std::filesystem::path filename, void *data, u64 size)
     file.close();
 }
 
-static void write_binary_file(const Container::Array<u8> &data, const Container::String &filename,
+static void write_binary_file(const Container::Array<u8> &data, const std::filesystem::path &filename,
                               const uint32_t count) {
     std::ofstream file;
 
     file.open(filename, std::ios::out | std::ios::binary | std::ios::trunc);
 
     if (!file.is_open()) {
-        LOG_ERROR("Failed to open file : {}", filename);
+        LOG_ERROR("Failed to open file : {}", filename.string());
         return;
     }
 
@@ -181,33 +172,33 @@ static void write_binary_file(const Container::Array<u8> &data, const Container:
     file.close();
 }
 
-Container::Array<u8> read_asset(const Container::String &filename, const uint32_t count) {
-    return read_binary_file(path::get(path::Type::Assets) + filename, count);
+Container::Array<u8> read_asset(const std::filesystem::path &filename, const uint32_t count) {
+    return read_binary_file(path::get(path::Type::Assets) / filename, count);
 }
 
-Container::String read_shader(const Container::String &filename) {
-    return read_text_file(path::get(path::Type::Shaders) + filename);
+Container::String read_shader(const std::filesystem::path &filename) {
+    return read_text_file(path::get(path::Type::Shaders) / filename);
 }
 
-Container::Array<u8> read_shader_binary(const Container::String &filename) {
-    return read_binary_file(path::get(path::Type::Shaders) + filename, 0);
+Container::Array<u8> read_shader_binary(const std::filesystem::path &filename) {
+    return read_binary_file(path::get(path::Type::Shaders) / filename, 0);
 }
 
-Container::Array<u8> read_temp(const Container::String &filename, const uint32_t count) {
-    return read_binary_file(path::get(path::Type::Temp) + filename, count);
+Container::Array<u8> read_temp(const std::filesystem::path &filename, const uint32_t count) {
+    return read_binary_file(path::get(path::Type::Temp) / filename, count);
 }
 
-void write_temp(const Container::Array<u8> &data, const Container::String &filename, const uint32_t count) {
-    write_binary_file(data, path::get(path::Type::Temp) + filename, count);
+void write_temp(const Container::Array<u8> &data, const std::filesystem::path &filename, const uint32_t count) {
+    write_binary_file(data, path::get(path::Type::Temp) / filename, count);
 }
 
-//void write_image(const u8 *data, const Container::String &filename, const uint32_t width, const uint32_t height,
+//void write_image(const u8 *data, const std::filesystem::path &filename, const uint32_t width, const uint32_t height,
 //                 const uint32_t components, const uint32_t row_stride) {
 //    stbi_write_png((path::get(path::Type::Screenshots) + filename + ".png").c_str(), width, height, components, data,
 //                   row_stride);
 //}
 
-bool write_json(nlohmann::json &data, const Container::String &filename) {
+bool write_json(nlohmann::json &data, const std::filesystem::path &filename) {
     std::stringstream json;
 
     try {
@@ -225,12 +216,12 @@ bool write_json(nlohmann::json &data, const Container::String &filename) {
     }
 
     std::ofstream out_stream;
-    out_stream.open(fs::path::get(fs::path::Type::Graphs) + filename, std::ios::out | std::ios::trunc);
+    out_stream.open(fs::path::get(fs::path::Type::Graphs) / filename, std::ios::out | std::ios::trunc);
 
     if (out_stream.good()) {
         out_stream << json.str();
     } else {
-        LOG_ERROR("Could not load JSON file {}", filename);
+        LOG_ERROR("Could not load JSON file {}", filename.string());
         return false;
     }
 

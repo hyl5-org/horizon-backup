@@ -386,9 +386,9 @@ struct DrawParam {
 enum class ResourceUpdateFrequency { NONE, PER_FRAME, PER_BATCH, PER_DRAW, BINDLESS, USER_DEFINED1 };
 
 struct DescriptorDesc {
-    DescriptorType type{};
-    u32 vk_binding{};
-    Container::String dx_reg{}; // todo : type -> reg type
+   DescriptorType type{};
+   u32 vk_binding{};
+   Container::String dx_reg{}; // todo : type -> reg type
 };
 
 struct PushConstantDesc {
@@ -398,8 +398,8 @@ struct PushConstantDesc {
 };
 
 struct RootSignatureDesc {
-    Container::FixedArray<Container::HashMap<Container::String, DescriptorDesc>, DESCRIPTOR_SET_UPDATE_FREQUENCIES> descriptors{};
-    Container::HashMap<Container::String, PushConstantDesc> push_constants;
+   Container::FixedArray<Container::HashMap<Container::String, DescriptorDesc>, DESCRIPTOR_SET_UPDATE_FREQUENCIES> descriptors{};
+   Container::HashMap<Container::String, PushConstantDesc> push_constants;
 };
 
 
@@ -898,7 +898,8 @@ struct ShaderCompilationSettings {
     ShaderOptimizationLevel optimization_level;
     ShaderTargetAPI target_api;
     std::filesystem::path input_dir, output_dir;
-    Container::Array<std::filesystem::path> shader_list; 
+    Container::Array<std::filesystem::path> shader_list;
+    bool force_recompile{false};
 };
 
 struct ShaderCompilationArgs {

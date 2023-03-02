@@ -1,12 +1,13 @@
 #include "shadow.h"
+extern Container::HashMap<ShaderList, Container::Array<u8>> shader_map;
 
 ConatactShadowData::ConatactShadowData(RHI *rhi) noexcept {}
 
 ConatactShadowData::~ConatactShadowData() noexcept {}
 
 ShadowMapData::ShadowMapData(RHI *rhi) noexcept {
-    shadow_map_vs = rhi->CreateShader(ShaderType::VERTEX_SHADER, 0, asset_path / "shaders/decal.vert.hsl");
-    shadow_map_ps = rhi->CreateShader(ShaderType::PIXEL_SHADER, 0, asset_path / "shaders/decal.frag.hsl");
+    shadow_map_vs = rhi->CreateShader(ShaderType::VERTEX_SHADER, shader_map[ShaderList::GEOMETRY_VS]);
+    shadow_map_ps = rhi->CreateShader(ShaderType::PIXEL_SHADER, shader_map[ShaderList::GEOMETRY_PS]);
 
     GraphicsPipelineCreateInfo graphics_pass_ci{};
     graphics_pass_ci.vertex_input_state.attribute_count = 5;

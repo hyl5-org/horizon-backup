@@ -1,5 +1,7 @@
 #include "vulkan_pipeline.h"
 
+#include <algorithm>
+
 #include "runtime/function/rhi/vulkan/vulkan_shader.h"
 
 namespace Horizon::Backend {
@@ -50,56 +52,56 @@ void VulkanPipeline::SetGraphicsShader(Shader *vs, Shader *ps) {
 
 DescriptorSet *VulkanPipeline::GetDescriptorSet(ResourceUpdateFrequency frequency) {
 
-    if (frequency == ResourceUpdateFrequency::BINDLESS) {
+    //if (frequency == ResourceUpdateFrequency::BINDLESS) {
 
-        if (!m_descriptor_set_allocator.m_bindless_descriptor_pool) {
-            m_descriptor_set_allocator.CreateBindlessDescriptorPool();
-        }
+    //    if (!m_descriptor_set_allocator.m_bindless_descriptor_pool) {
+    //        m_descriptor_set_allocator.CreateBindlessDescriptorPool();
+    //    }
 
-        VkDescriptorSetAllocateInfo alloc_info{};
-        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        alloc_info.descriptorPool = m_descriptor_set_allocator.m_bindless_descriptor_pool;
+    //    VkDescriptorSetAllocateInfo alloc_info{};
+    //    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    //    alloc_info.descriptorPool = m_descriptor_set_allocator.m_bindless_descriptor_pool;
 
-        alloc_info.descriptorSetCount = 1;
-        VkDescriptorSetLayout layout = m_descriptor_set_allocator.GetVkDescriptorSetLayout(
-            this->m_pipeline_layout_desc.descriptor_set_hash_key[static_cast<u32>(frequency)]);
-        alloc_info.pSetLayouts = &layout;
+    //    alloc_info.descriptorSetCount = 1;
+    //    VkDescriptorSetLayout layout = m_descriptor_set_allocator.GetVkDescriptorSetLayout(
+    //        this->m_pipeline_layout_desc.descriptor_set_hash_key[static_cast<u32>(frequency)]);
+    //    alloc_info.pSetLayouts = &layout;
 
-        VkDescriptorSetVariableDescriptorCountAllocateInfo count_info{};
-        count_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT;
-        u32 max_binding = m_descriptor_set_allocator.k_max_bindless_resources;
-        count_info.descriptorSetCount = 1;
-        // This number is the max allocatable count
-        count_info.pDescriptorCounts = &max_binding;
-        alloc_info.pNext = &count_info;
-        VkDescriptorSet vk_ds;
-        CHECK_VK_RESULT(vkAllocateDescriptorSets(m_context.device, &alloc_info, &vk_ds));
-        DescriptorSet *set = Memory::Alloc<VulkanDescriptorSet>(m_context, frequency,
-                                                                rsd.descriptors[static_cast<u32>(frequency)], vk_ds);
-        m_descriptor_set_allocator.allocated_sets.push_back(set);
-        return set;
-    } else {
+    //    VkDescriptorSetVariableDescriptorCountAllocateInfo count_info{};
+    //    count_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT;
+    //    u32 max_binding = m_descriptor_set_allocator.k_max_bindless_resources;
+    //    count_info.descriptorSetCount = 1;
+    //    // This number is the max allocatable count
+    //    count_info.pDescriptorCounts = &max_binding;
+    //    alloc_info.pNext = &count_info;
+    //    VkDescriptorSet vk_ds;
+    //    CHECK_VK_RESULT(vkAllocateDescriptorSets(m_context.device, &alloc_info, &vk_ds));
+    //    DescriptorSet *set = Memory::Alloc<VulkanDescriptorSet>(m_context, frequency,
+    //                                                            rsd.descriptors[static_cast<u32>(frequency)], vk_ds);
+    //    m_descriptor_set_allocator.allocated_sets.push_back(set);
+    //    return set;
+    //} else {
 
-        if (!m_descriptor_set_allocator.m_temp_descriptor_pool) {
-            m_descriptor_set_allocator.CreateDescriptorPool();
-        }
+    //    if (!m_descriptor_set_allocator.m_temp_descriptor_pool) {
+    //        m_descriptor_set_allocator.CreateDescriptorPool();
+    //    }
 
-        VkDescriptorSetAllocateInfo alloc_info{};
-        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    //    VkDescriptorSetAllocateInfo alloc_info{};
+    //    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 
-        VkDescriptorSetLayout layout = m_descriptor_set_allocator.GetVkDescriptorSetLayout(
-            this->m_pipeline_layout_desc.descriptor_set_hash_key[static_cast<u32>(frequency)]);
+    //    VkDescriptorSetLayout layout = m_descriptor_set_allocator.GetVkDescriptorSetLayout(
+    //        this->m_pipeline_layout_desc.descriptor_set_hash_key[static_cast<u32>(frequency)]);
 
-        alloc_info.descriptorPool = m_descriptor_set_allocator.m_temp_descriptor_pool;
-        alloc_info.descriptorSetCount = 1;
-        alloc_info.pSetLayouts = &layout;
-        VkDescriptorSet vk_ds;
-        CHECK_VK_RESULT(vkAllocateDescriptorSets(m_context.device, &alloc_info, &vk_ds));
-        DescriptorSet *set = Memory::Alloc<VulkanDescriptorSet>(m_context, frequency,
-                                                                rsd.descriptors[static_cast<u32>(frequency)], vk_ds);
-        m_descriptor_set_allocator.allocated_sets.push_back(set);
-        return set;
-    }
+    //    alloc_info.descriptorPool = m_descriptor_set_allocator.m_temp_descriptor_pool;
+    //    alloc_info.descriptorSetCount = 1;
+    //    alloc_info.pSetLayouts = &layout;
+    //    VkDescriptorSet vk_ds;
+    //    CHECK_VK_RESULT(vkAllocateDescriptorSets(m_context.device, &alloc_info, &vk_ds));
+    //    DescriptorSet *set = Memory::Alloc<VulkanDescriptorSet>(m_context, frequency,
+    //                                                            rsd.descriptors[static_cast<u32>(frequency)], vk_ds);
+    //    m_descriptor_set_allocator.allocated_sets.push_back(set);
+    //    return set;
+    //}
     ////new VulkanDescriptorSet();
 
     //// m_descriptor_set_allocator.UpdateDescriptorPoolInfo(this, m_pipeline_layout_desc.descriptor_set_hash_key);
@@ -147,7 +149,28 @@ DescriptorSet *VulkanPipeline::GetDescriptorSet(ResourceUpdateFrequency frequenc
     //     sets[i] = new DescriptorSet()
     // }
     // return sets;
-    // return {};
+    return {};
+}
+
+//void ParseRootSignatureFromShader(VulkanShader *shader, ResourceUpdateFrequency frequency> &dst_binding) {
+//    dst_binding.merge(shader->descriptor_bindings[static_cast<u32>(frequency)]);
+//    shader->descriptor_bindings[static_cast<u32>(frequency)].clear();
+//}
+
+Container::HashMap<Container::String, VkDescriptorSetLayoutBinding>
+VulkanPipeline::GetDescriptorSetLayoutBinding(ResourceUpdateFrequency frequency) noexcept {
+    Container::HashMap<Container::String, VkDescriptorSetLayoutBinding> pipeline_descriptor_set_layout_binding{};
+    //if (m_create_info.type == PipelineType::GRAPHICS) {
+    //    ParseRootSignatureFromShader(reinterpret_cast<VulkanShader *>(m_vs), frequency,
+    //                                 pipeline_descriptor_set_layout_binding);
+    //    ParseRootSignatureFromShader(reinterpret_cast<VulkanShader *>(m_ps), frequency,
+    //                                 pipeline_descriptor_set_layout_binding);
+    //} else if (m_create_info.type == PipelineType::COMPUTE) {
+    //    ParseRootSignatureFromShader(reinterpret_cast<VulkanShader *>(m_cs), frequency,
+    //                                 pipeline_descriptor_set_layout_binding);
+    //}
+    //return pipeline_descriptor_set_layout_binding;
+    return pipeline_descriptor_set_layout_binding;
 }
 
 void VulkanPipeline::CreateGraphicsPipeline() {
@@ -402,54 +425,52 @@ void VulkanPipeline::CreateComputePipeline() {
 }
 
 void VulkanPipeline::CreatePipelineLayout() {
-
     VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
 
     pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
-    ParseRootSignature();
-
+    //ParseRootSignature();
+    
     // if no descriptor declared in shader
-    bool need_descriptorset = !rsd.descriptors.empty();
 
     auto stack_memory = Memory::GetStackMemoryResource(1024);
 
     Container::Array<VkDescriptorSetLayout> layouts(&stack_memory);
     Container::Array<VkPushConstantRange> push_constant_ranges(&stack_memory);
 
-    if (need_descriptorset) {
+    //if (1) {
 
-        m_descriptor_set_allocator.CreateDescriptorSetLayout(this);
+    //     m_descriptor_set_allocator.CreateDescriptorSetLayout(this);
 
-        layouts.reserve(m_pipeline_layout_desc.descriptor_set_hash_key.size());
-        for (auto &key : m_pipeline_layout_desc.descriptor_set_hash_key) {
+    //    layouts.reserve(m_pipeline_layout_desc.descriptor_set_hash_key.size());
+    //    for (auto &key : m_pipeline_layout_desc.descriptor_set_hash_key) {
+    //        layouts.emplace_back(m_descriptor_set_allocator.GetVkDescriptorSetLayout(key));
+    //    }
 
-            layouts.emplace_back(m_descriptor_set_allocator.GetVkDescriptorSetLayout(key));
-        }
+    //    push_constant_ranges.reserve(rsd.push_constants.size());
 
-        push_constant_ranges.reserve(rsd.push_constants.size());
+    //    for (auto &[name, pc] : rsd.push_constants) {
+    //        push_constant_ranges.emplace_back(VkPushConstantRange{
+    //            ToVkShaderStageFlags(pc.shader_stages),
+    //            pc.offset,
+    //            pc.size,
+    //        });
+    //    }
 
-        for (auto &[name, pc] : rsd.push_constants) {
-            push_constant_ranges.emplace_back(VkPushConstantRange{
-                ToVkShaderStageFlags(pc.shader_stages),
-                pc.offset,
-                pc.size,
-            });
-        }
-
-        pipeline_layout_create_info.setLayoutCount = static_cast<u32>(layouts.size());
-        pipeline_layout_create_info.pSetLayouts = layouts.data();
-        pipeline_layout_create_info.pushConstantRangeCount = static_cast<u32>(push_constant_ranges.size());
-        pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
-    } else {
-        pipeline_layout_create_info.setLayoutCount = 0;
-        pipeline_layout_create_info.pSetLayouts = nullptr;
-        pipeline_layout_create_info.pushConstantRangeCount = 0;
-        pipeline_layout_create_info.pPushConstantRanges = nullptr;
-    }
+    //    pipeline_layout_create_info.setLayoutCount = static_cast<u32>(layouts.size());
+    //    pipeline_layout_create_info.pSetLayouts = layouts.data();
+    //    pipeline_layout_create_info.pushConstantRangeCount = static_cast<u32>(push_constant_ranges.size());
+    //    pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
+    //} else {
+    //    pipeline_layout_create_info.setLayoutCount = 0;
+    //    pipeline_layout_create_info.pSetLayouts = nullptr;
+    //    pipeline_layout_create_info.pushConstantRangeCount = 0;
+    //    pipeline_layout_create_info.pPushConstantRanges = nullptr;
+    //}
 
     CHECK_VK_RESULT(
         vkCreatePipelineLayout(m_context.device, &pipeline_layout_create_info, nullptr, &m_pipeline_layout));
 }
+
 
 } // namespace Horizon::Backend

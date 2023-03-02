@@ -24,17 +24,17 @@ class Pipeline {
     virtual void SetComputeShader(Shader *vs) = 0;
     virtual void SetGraphicsShader(Shader *vs, Shader *ps) = 0;
 
-    virtual DescriptorSet * GetDescriptorSet(ResourceUpdateFrequency frequency) = 0;
-  protected:
+    virtual DescriptorSet *GetDescriptorSet(ResourceUpdateFrequency frequency) = 0;
 
-    void ParseRootSignature(); 
-    void ParseRootSignatureFromShader(Shader* shader); 
+  protected:
+    //void ParseRootSignature(); 
+    //virtual void ParseRootSignatureFromShader(Shader* shader) = 0;  
 
   protected:
     // array contain all kinds of shaders
     Shader *m_vs{}, *m_ps{}, *m_cs{};
     PipelineCreateInfo m_create_info{};
-    RootSignatureDesc rsd{};
-    Container::FixedArray<u32, DESCRIPTOR_SET_UPDATE_FREQUENCIES> vk_binding_count{};
+    //RootSignatureDesc rsd{};
+    //Container::FixedArray<u32, DESCRIPTOR_SET_UPDATE_FREQUENCIES> vk_binding_count{};
 };
 } // namespace Horizon::Backend

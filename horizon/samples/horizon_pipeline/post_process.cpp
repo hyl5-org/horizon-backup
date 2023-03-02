@@ -1,8 +1,10 @@
 #include "post_process.h"
 
+extern Container::HashMap<ShaderList, Container::Array<u8>> shader_map;
+
 PostProcessData::PostProcessData(Backend::RHI *rhi) noexcept {
     // PP PASS
-    post_process_cs = rhi->CreateShader(ShaderType::COMPUTE_SHADER, 0, asset_path / "shaders/post_process.comp.hsl");
+    post_process_cs = rhi->CreateShader(ShaderType::COMPUTE_SHADER, shader_map[ShaderList::POST_PROCESS_CS]);
     post_process_pass = rhi->CreateComputePipeline(ComputePipelineCreateInfo{});
     pp_color_texture = rhi->CreateTexture(TextureCreateInfo{
         DescriptorType::DESCRIPTOR_TYPE_RW_TEXTURE, ResourceState::RESOURCE_STATE_UNORDERED_ACCESS,

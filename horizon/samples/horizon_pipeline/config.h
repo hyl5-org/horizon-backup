@@ -30,3 +30,17 @@ using namespace Horizon::Backend;
 static constexpr u32 _width = 3200, _height = 1800;
 
 static std::filesystem::path asset_path = "C:/FILES/horizon/horizon/assets";
+
+// TODO generate the enum in compile time
+enum class ShaderList {
+    COMPACT_INDEX_BUFFER_CS,
+    GEOMETRY_VS,
+    GEOMETRY_PS,
+    GPU_MESH_CULLING_CS,
+    GPU_TRIANGLE_CULLING_CS,
+    POST_PROCESS_CS,
+    SSAO_CS,
+    SSAO_BLUR_CS,
+    TAA_CS,
+    SHADING_CS
+};

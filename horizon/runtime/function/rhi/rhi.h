@@ -69,7 +69,7 @@ class RHI {
     virtual void DestroySwapChain(SwapChain *swap_chain) = 0;
 
     // TODO: modify this with new shader system
-    virtual Shader *CreateShader(ShaderType type, const std::filesystem::path &file_name) = 0;
+    virtual Shader *CreateShader(ShaderType type, const Container::Array<u8> &shader_binary) = 0;
 
     virtual void DestroyShader(Shader *shader_program) = 0;
 

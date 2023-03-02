@@ -8,12 +8,10 @@
 #include <boost/graph/edge_list.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/graph/graph_utility.hpp>
-#include <boost/property_map/property_map.hpp>
 #include <boost/graph/degree_centrality.hpp>
 #include <boost/graph/directed_graph.hpp>
-
-
+#include <boost/graph/graph_utility.hpp>
+#include <boost/property_map/property_map.hpp>
 
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
@@ -199,11 +197,11 @@ void ShaderCompiler::CompileShaders(const ShaderCompilationSettings &settings) {
 
     // multithread shader compiling
     tbb::parallel_for(tbb::blocked_range<u32>(0, static_cast<u32>(shader_compilation_settings.size())),
-                      [&shader_compilation_settings, &shader_texts](const tbb::blocked_range<u32> &r) {
+                      [&shader_compilation_settings, &shader_texts, &settings](const tbb::blocked_range<u32> &r) {
                           for (u32 v = r.begin(); v < r.end(); v++) {
                               auto &shader = shader_compilation_settings[v];
                               auto &[shader_text, need_compile] = shader_texts[shader.path];
-                              if (need_compile) {
+                              if (settings.force_recompile == true || need_compile) {
                                   LOG_INFO("compiling {}, {}", shader.path.string(), need_compile);
                                   ShaderCompiler::Compile(shader_text, shader.args);
                               }
@@ -250,7 +248,8 @@ void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const S
 
     compilation_arguments.push_back(L"I");
     compilation_arguments.push_back(ip.c_str());
-
+    compilation_arguments.push_back(L"-HV 2021");
+    
     if (USE_ROW_MAJOR_MATRIX) {
         compilation_arguments.push_back(DXC_ARG_PACK_MATRIX_ROW_MAJOR);
     }
@@ -269,39 +268,48 @@ void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const S
     if (compile_args.target_api == ShaderTargetAPI::SPIRV) {
         compilation_arguments.push_back(L"-spirv");
         compilation_arguments.push_back(L"-fspv-target-env=vulkan1.3");
+        //compilation_arguments.push_back(L"-fspv-reflect");
     }
 
     DxcBuffer source_buffer{hlsl_blob->GetBufferPointer(), hlsl_blob->GetBufferSize(), 0u};
 
     IDxcResult *compile_result{};
-    CHECK_DX_RESULT(idxc_compiler->Compile(&source_buffer, compilation_arguments.data(),
-                                           static_cast<u32>(compilation_arguments.size()), idxc_include_handler,
-                                           IID_PPV_ARGS(&compile_result)));
-
-    // handle errors
+    if (FAILED(idxc_compiler->Compile(&source_buffer, compilation_arguments.data(),
+                                      static_cast<u32>(compilation_arguments.size()), idxc_include_handler,
+                                      IID_PPV_ARGS(&compile_result)))) {
+        LOG_ERROR("{}", "Internal error or API misuse! Compile Failed");
+        return;
+    }
 
     // Get compilation errors (if any).
     IDxcBlobUtf8 *errors{};
-    CHECK_DX_RESULT(compile_result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr));
-    if (errors && errors->GetStringLength() > 0) {
-        const LPCSTR errorMessage = errors->GetStringPointer();
-        LOG_ERROR("shader compilation failed {}", errorMessage);
+
+    if (SUCCEEDED(compile_result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr)) && errors != nullptr &&
+        errors->GetStringLength() != 0) {
+        LOG_ERROR("Warnings and Errors:{}", errors->GetStringPointer());
+    }
+
+    //
+    // Quit if the compilation failed.
+    //
+    HRESULT hrStatus;
+    if (FAILED(compile_result->GetStatus(&hrStatus)) || FAILED(hrStatus)) {
+        // Compilation failed, but successful HRESULT was returned.
+        // Could reuse the compiler and allocator objects. For simplicity, exit here anyway
+        LOG_ERROR("{}", "Compilation Failed");
+        return;
     }
 
     // save result to disk
     // TODO(hylu): prevent expose std::iostream to handle IO
     std::ofstream os;
     os.open(compile_args.out_file_path, std::ios::binary | std::ios::out);
-    struct ShaderBlobHeader {
-        //
-        // version
-        // magic number
-        u32 size;
-        u32 reflection_blob;
-        u32 dxil_offset;
-        u32 spirv_offset;
-    } header{};
-    os.write(reinterpret_cast<const char *>(&header), sizeof(ShaderBlobHeader));
+    ShaderBinaryHeader header{};
+    header.header = hsb_header;
+    
+    os.write(reinterpret_cast<const char *>(&header), sizeof(ShaderBinaryHeader));
+
+    header.shader_blob_offset = sizeof(ShaderBinaryHeader);
 
     // IR/IL
     //TODO(hylu) save both dxil and spirv, for changing backend in runtime?
@@ -311,20 +319,47 @@ void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const S
         IDxcBlob *spirv_code;
         compile_result->GetResult(&spirv_code);
         os.write(static_cast<const char *>(spirv_code->GetBufferPointer()), spirv_code->GetBufferSize());
+        header.shader_blob_size = static_cast<u32>(spirv_code->GetBufferSize());
     }
+    //
+    // Save pdb.
+    //
+    //IDxcBlob *p_pdb{};
+    //if (SUCCEEDED(compile_result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&p_pdb), nullptr))) {
+    //    os.write(static_cast<const char *>(p_pdb->GetBufferPointer()), p_pdb->GetBufferSize());
+    //}
 
-    // create reflection data
+    //
+    // Print hash.
+    //
+    //CComPtr<IDxcBlob> pHash = nullptr;
+    //if (SUCCEEDED(pResults->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(&pHash), nullptr)) && pHash != nullptr) {
+    //    wprintf(L"Hash: ");
+    //    DxcShaderHash *pHashBuf = (DxcShaderHash *)pHash->GetBufferPointer();
+    //    for (int i = 0; i < _countof(pHashBuf->HashDigest); i++)
+    //        wprintf(L"%x", pHashBuf->HashDigest[i]);
+    //    wprintf(L"\n");
+    //}
 
-    os.close();
+    // create reflection data(only for dxil)
+    //IDxcBlob* pReflectionData;
+    //if (SUCCEEDED(compile_result->GetOutput(DXC_OUT_REFLECTION, IID_PPV_ARGS(&pReflectionData), nullptr)) &&
+    //    pReflectionData != nullptr) {
+    //
+    //}
+
     //IDxcBlob *reflection_blob{};
     //CHECK_DX_RESULT(compile_result->GetOutput(DXC_OUT_REFLECTION, IID_PPV_ARGS(&reflection_blob), nullptr));
 
     //DxcBuffer reflectionBuffer{reflection_blob->GetBufferPointer(), reflection_blob->GetBufferSize(), 0};
 
-    //ID3D12ShaderReflection *shaderReflection{};
-    //idxc_utils->CreateReflection(&reflectionBuffer, IID_PPV_ARGS(&shaderReflection));
+    //ID3D12ShaderReflection *shader_reflection{};
+    //idxc_utils->CreateReflection(&reflectionBuffer, IID_PPV_ARGS(&shader_reflection));
     //D3D12_SHADER_DESC shaderDesc{};
-    //shaderReflection->GetDesc(&shaderDesc);
+    //shader_reflection->GetDesc(&shaderDesc);
+    os.seekp(0, std::ios::beg);
+    os.write(reinterpret_cast<const char *>(&header), sizeof(ShaderBinaryHeader));
+    os.close();
 
     // release resources
 }
