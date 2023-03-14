@@ -5,8 +5,8 @@
 
 #include "runtime/function/rhi/rhi_utils.h"
 
-
 namespace Horizon::Backend {
+
 class Shader {
   public:
     Shader(ShaderType type) noexcept;
@@ -19,10 +19,8 @@ class Shader {
 
     ShaderType GetType() const noexcept;
 
-    //const std::filesystem::path &GetRootSignatureDescriptionPath() const noexcept { return m_rsd_path; }
   protected:
     const ShaderType m_type{};
-    //const std::filesystem::path m_rsd_path; // lazy read
 
 
 };

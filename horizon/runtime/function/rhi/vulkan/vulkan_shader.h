@@ -69,7 +69,7 @@ struct ShaderResource {
 
     uint32_t qualifiers;
 
-    std::string name;
+    Container::String name;
 };
 
 /**
@@ -165,26 +165,26 @@ class VulkanShader : public Shader {
     VulkanShader(VulkanShader &&rhs) noexcept = delete;
     VulkanShader &operator=(VulkanShader &&rhs) noexcept = delete;
 
+    public:
+    const std::vector<ShaderResource> &GetResources() { return resources; }
   public:
     const VulkanRendererContext &m_context{};
     VkShaderModule m_shader_module{};
-    Container::FixedArray<Container::HashMap<Container::String, VkDescriptorSetLayoutBinding>, DESCRIPTOR_SET_UPDATE_FREQUENCIES>
-        descriptor_bindings;
-    /// Shader unique id
-    size_t id;
+    ///// Shader unique id
+    //size_t id;
 
     /// Stage of the shader (vertex, fragment, etc)
     VkShaderStageFlagBits stage{};
 
-    /// Name of the main function
-    std::string entry_point;
+    ///// Name of the main function
+    //std::string entry_point;
 
-    /// Human-readable name for the shader
-    std::string debug_name;
+    ///// Human-readable name for the shader
+    //std::string debug_name;
 
     std::vector<ShaderResource> resources;
 
-    std::string info_log;
+    //std::string info_log;
 };
 
 } // namespace Horizon::Backend

@@ -57,6 +57,8 @@ class RHIVulkan : public RHI {
 
     void DestroyPipeline(Pipeline *pipeline) override;
 
+    DescriptorSet* GetDescriptorSet(Pipeline *pipeline, ResourceUpdateFrequency frequency) override;
+
     Semaphore *CreateSemaphore1() override;
 
     Sampler *CreateSampler(const SamplerDesc &sampler_desc) override;

@@ -79,6 +79,8 @@ class RHI {
 
     virtual void DestroyPipeline(Pipeline *pipeline) = 0;
 
+    virtual DescriptorSet *GetDescriptorSet(Pipeline *pipeline, ResourceUpdateFrequency frequency) = 0;
+
     virtual CommandList *GetCommandList(CommandQueueType type) = 0;
 
     virtual Semaphore *CreateSemaphore1() = 0;

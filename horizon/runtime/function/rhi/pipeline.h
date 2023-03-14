@@ -32,9 +32,7 @@ class Pipeline {
 
   protected:
     // array contain all kinds of shaders
-    Shader *m_vs{}, *m_ps{}, *m_cs{};
+    Container::FixedArray<Shader *, static_cast<u64>(ShaderType::SHADER_TYPE_COUNT)> shaders{};
     PipelineCreateInfo m_create_info{};
-    //RootSignatureDesc rsd{};
-    //Container::FixedArray<u32, DESCRIPTOR_SET_UPDATE_FREQUENCIES> vk_binding_count{};
 };
 } // namespace Horizon::Backend

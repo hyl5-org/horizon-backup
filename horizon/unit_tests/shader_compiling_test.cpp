@@ -54,11 +54,6 @@ TEST_CASE_FIXTURE(ShaderCompilationTest, "dependency") {
    auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(tp2 - tp1).count();
 
    LOG_INFO("spend {} ms to copmile {} shader", dur, settings.shader_list.size());
-
-   auto spvcode = fs::read_binary_file("C:/FILES/horizon/horizon/assets/hlsl/generated/post_process.comp.hlsl.CS.hsb");
-
-   spirv_cross::Compiler compiler((u32*)spvcode.data(), spvcode.size());
-   auto rest = compiler.get_shader_resources();
    // threading
 }
 

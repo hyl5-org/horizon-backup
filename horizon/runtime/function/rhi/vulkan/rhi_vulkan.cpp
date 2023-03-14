@@ -529,6 +529,8 @@ Pipeline *RHIVulkan::CreateComputePipeline(const ComputePipelineCreateInfo &crea
 
 void RHIVulkan::DestroyPipeline(Pipeline *pipeline) { delete pipeline; }
 
+DescriptorSet *RHIVulkan::GetDescriptorSet(Pipeline *pipeline, ResourceUpdateFrequency frequency) { return nullptr; }
+
 Semaphore *RHIVulkan::CreateSemaphore1() { return Memory::Alloc<VulkanSemaphore>(m_vulkan); }
 
 Sampler *RHIVulkan::CreateSampler(const SamplerDesc &sampler_desc) {

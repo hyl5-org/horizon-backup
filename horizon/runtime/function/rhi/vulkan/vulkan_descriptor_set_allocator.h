@@ -28,6 +28,7 @@ struct PipelineDescriptorSetResource {
 static constexpr Container::FixedArray<u32, DESCRIPTOR_SET_UPDATE_FREQUENCIES> m_reserved_max_sets{
     1, 1, 16, 16}; // per batch / per draw descriptorpool can allocate 16 descriptorsets
 
+
 class VulkanDescriptorSetAllocator {
   public:
     VulkanDescriptorSetAllocator(const VulkanRendererContext &context) noexcept;

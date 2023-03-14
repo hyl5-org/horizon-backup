@@ -90,6 +90,7 @@ enum class ShaderType {
     COMPUTE_SHADER,
     // GEOMETRY_SHADER,
     //  ray tracing related shader
+    SHADER_TYPE_COUNT
 };
 
 enum ShaderStageFlags {

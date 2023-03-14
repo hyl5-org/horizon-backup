@@ -35,9 +35,12 @@ target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 # target_link_libraries(${PROJECT_NAME} PUBLIC Microsoft::DirectXTK12)
 
 
-add_subdirectory(SPIRV-Cross)
-target_link_libraries(${PROJECT_NAME} PRIVATE spirv-cross-core spirv-cross-reflect)
-
+# add_subdirectory(SPIRV-Cross)
+# target_link_libraries(${PROJECT_NAME} PRIVATE spirv-cross-core spirv-cross-reflect)
+find_package(spirv_cross_core CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE spirv-cross-core)
+find_package(spirv_cross_reflect CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE spirv-cross-reflect)
 # directx shader compiler
 # find_package(directx-dxc REQUIRED)
 # target_link_directories(${PROJECT_NAME} PUBLIC )

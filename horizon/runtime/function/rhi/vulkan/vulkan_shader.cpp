@@ -40,47 +40,11 @@ VulkanShader::VulkanShader(const VulkanRendererContext &context, ShaderType type
     CHECK_VK_RESULT(vkCreateShaderModule(m_context.device, &shader_module_create_info, nullptr, &m_shader_module));
 
     // reflect descriptor from shader
-    {
-        SPIRVReflection spirv_reflection;
-        std::vector<u32> arr(spirv_code_size/4);
-        memcpy(arr.data(), p_spirv_code, spirv_code_size);
-
-        spirv_reflection.reflect_shader_resources(ToVkShaderStageBit(type), std::move(arr), resources);
-        //spirv_reflection.reflect_shader_resources(ToVkShaderStageBit(type), arr, resources);
-
-        //SpvReflectShaderModule module;
-        //if (spvReflectCreateShaderModule(spirv_code_size, p_spirv_code, &module) != SPV_REFLECT_RESULT_SUCCESS) {
-        //    LOG_ERROR("failed to reflect spirv code");
-        //    return;
-        //}
-
-        //{
-        //    u32 count = 0;
-        //    SpvReflectResult result = spvReflectEnumerateDescriptorSets(&module, &count, NULL);
-        //    Container::Array<SpvReflectDescriptorSet *> reflected_sets(count);
-        //    result = spvReflectEnumerateDescriptorSets(&module, &count, reflected_sets.data());
-        //    assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-        //    for (const auto &reflected_set : reflected_sets) {
-        //        for (u32 binding; binding < reflected_set->binding_count; binding++) {
-        //            const auto &reflected_binding = *reflected_set->bindings[binding];
-        //            descriptor_bindings[reflected_set->set].emplace(reflected_binding.name,
-        //                                                            VkDescriptorSetLayoutBinding{});
-        //            auto &layout_binding_info = descriptor_bindings[reflected_set->set][reflected_binding.name];
-        //            layout_binding_info.binding = reflected_binding.binding;
-        //            layout_binding_info.descriptorType =
-        //                static_cast<VkDescriptorType>(reflected_binding.descriptor_type);
-        //            layout_binding_info.descriptorCount = 1;
-        //            for (uint32_t i_dim = 0; i_dim < reflected_binding.array.dims_count; ++i_dim) {
-        //                layout_binding_info.descriptorCount *= reflected_binding.array.dims[i_dim];
-        //            }
-        //            layout_binding_info.stageFlags |= static_cast<VkShaderStageFlagBits>(module.shader_stage);
-        //        }
-        //    }
-        //}
-
-        //spvReflectDestroyShaderModule(&module);
-    }
+    SPIRVReflection spirv_reflection;
+    std::vector<u32> arr(spirv_code_size / sizeof(u32));
+    memcpy(arr.data(), p_spirv_code, spirv_code_size);
+    spirv_reflection.reflect_shader_resources(ToVkShaderStageBit(type), static_cast<u32 *>(p_spirv_code),
+                                              spirv_code_size / sizeof(u32), resources);
 }
 
 VulkanShader::~VulkanShader() noexcept { vkDestroyShaderModule(m_context.device, m_shader_module, nullptr); }
