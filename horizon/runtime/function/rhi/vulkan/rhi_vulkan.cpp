@@ -1,4 +1,4 @@
-/*****************************************************************//**
+/*****************************************************************/ /**
  * \file   rhi_vulkan.cpp
  * \brief  
  * 
@@ -14,8 +14,8 @@
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
-#include "runtime/core/utils/functions.h"
 #include "runtime/core/io/file_system.h"
+#include "runtime/core/utils/functions.h"
 #include "runtime/function/rhi/vulkan/vulkan_buffer.h"
 #include "runtime/function/rhi/vulkan/vulkan_command_context.h"
 #include "runtime/function/rhi/vulkan/vulkan_pipeline.h"
@@ -38,12 +38,9 @@ RHIVulkan::~RHIVulkan() noexcept {
             vkDestroyFence(m_vulkan.device, fence, nullptr);
         }
     }
-    
+
     Memory::Free(thread_command_context);
     thread_command_context = nullptr;
-
-    Memory::Free(m_descriptor_set_allocator);
-    m_descriptor_set_allocator = nullptr; // release
 
     vmaDestroyAllocator(m_vulkan.vma_allocator);
     vkDestroyDevice(m_vulkan.device, nullptr);
@@ -71,7 +68,7 @@ SwapChain *RHIVulkan::CreateSwapChain(const SwapChainCreateInfo &create_info) {
     return Memory::Alloc<VulkanSwapChain>(m_vulkan, create_info, m_window);
 }
 
-Shader *RHIVulkan::CreateShader(ShaderType type, const Container::Array<u8>& shader_binary_code) {
+Shader *RHIVulkan::CreateShader(ShaderType type, const Container::Array<u8> &shader_binary_code) {
     return Memory::Alloc<VulkanShader>(m_vulkan, type, shader_binary_code);
 }
 
@@ -105,7 +102,7 @@ void RHIVulkan::InitializeVulkanRenderer(const Container::String &app_name) {
     InitializeVMA();
     // create sync objects
     CreateSyncObjects();
-    m_descriptor_set_allocator = Memory::Alloc<VulkanDescriptorSetAllocator>(m_vulkan);
+    CreateDescriptorPool();
 }
 
 void RHIVulkan::CreateInstance(const Container::String &app_name, Container::Array<const char *> &instance_layers,
@@ -183,7 +180,7 @@ void RHIVulkan::PickGPU(VkInstance instance, VkPhysicalDevice *gpu) {
                 queue_family_properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) {
                 m_vulkan.command_queue_familiy_indices[CommandQueueType::GRAPHICS] = i;
             }
-            
+
             // dedicate compute queue
             if (!(queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
                 queue_family_properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT &&
@@ -320,6 +317,8 @@ VkFence RHIVulkan::GetFence(CommandQueueType type) noexcept {
     fence_index[type]++;
     return fence;
 }
+
+void RHIVulkan::CreateDescriptorPool() noexcept { m_descriptor_pool = Memory::MakeUnique<DescriptorPool>(m_vulkan); }
 
 void RHIVulkan::SubmitCommandLists(const QueueSubmitInfo &queue_submit_info) {
 
@@ -516,20 +515,22 @@ void RHIVulkan::ResetRHIResources() {
     if (thread_command_context) {
         thread_command_context->Reset();
     }
-    m_descriptor_set_allocator->ResetDescriptorPool();
 }
 
 Pipeline *RHIVulkan::CreateGraphicsPipeline(const GraphicsPipelineCreateInfo &create_info) {
-    return Memory::Alloc<VulkanPipeline>(m_vulkan, create_info, *m_descriptor_set_allocator);
+    return Memory::Alloc<VulkanPipeline>(m_vulkan, *m_descriptor_pool.get(), create_info);
 }
 
 Pipeline *RHIVulkan::CreateComputePipeline(const ComputePipelineCreateInfo &create_info) {
-    return Memory::Alloc<VulkanPipeline>(m_vulkan, create_info, *m_descriptor_set_allocator);
+    return Memory::Alloc<VulkanPipeline>(m_vulkan, *m_descriptor_pool.get(), create_info);
 }
 
 void RHIVulkan::DestroyPipeline(Pipeline *pipeline) { delete pipeline; }
 
-DescriptorSet *RHIVulkan::GetDescriptorSet(Pipeline *pipeline, ResourceUpdateFrequency frequency) { return nullptr; }
+DescriptorSet *RHIVulkan::GetDescriptorSet(Pipeline *pipeline, ResourceUpdateFrequency frequency) {
+    VulkanPipeline *vk_pipeline = dynamic_cast<VulkanPipeline *>(pipeline);
+    return vk_pipeline->GetDescriptorSet(frequency);
+}
 
 Semaphore *RHIVulkan::CreateSemaphore1() { return Memory::Alloc<VulkanSemaphore>(m_vulkan); }
 

@@ -12,8 +12,8 @@ TAAData::TAAData(Backend::RHI *rhi) noexcept {
     output_color_texture = rhi->CreateTexture(TextureCreateInfo{
         DescriptorType::DESCRIPTOR_TYPE_RW_TEXTURE, ResourceState::RESOURCE_STATE_UNORDERED_ACCESS,
         TextureType::TEXTURE_TYPE_2D, TextureFormat::TEXTURE_FORMAT_RGBA8_UNORM, _width, _height, 1, false});
-    taa_pass->SetComputeShader(taa_cs);
-
+    taa_pass->SetShader(taa_cs);
+    // create pass
     taa_samples = {
         math::Vector2f(0.500000, 0.333333), math::Vector2f(0.250000, 0.666667), math::Vector2f(0.750000, 0.111111),
         math::Vector2f(0.125000, 0.444444), math::Vector2f(0.625000, 0.777778), math::Vector2f(0.375000, 0.222222),

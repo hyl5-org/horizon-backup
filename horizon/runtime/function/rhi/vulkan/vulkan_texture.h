@@ -13,7 +13,7 @@ class VulkanTexture : public Texture {
     VulkanTexture &operator=(const VulkanTexture &rhs) noexcept = delete;
     VulkanTexture(VulkanTexture &&rhs) noexcept = delete;
     VulkanTexture &operator=(VulkanTexture &&rhs) noexcept = delete;
-    VkDescriptorImageInfo *GetDescriptorImageInfo(DescriptorType descriptor_type) noexcept;
+    VkDescriptorImageInfo *GetDescriptorImageInfo(VkDescriptorType descriptor_type) noexcept;
   public:
     const VulkanRendererContext &m_context;
     VkImage m_image{};

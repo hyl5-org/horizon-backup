@@ -77,7 +77,8 @@ ShadowMapData::ShadowMapData(RHI *rhi) noexcept {
     graphics_pass_ci.render_target_formats.depth_stencil_format = TextureFormat::TEXTURE_FORMAT_D32_SFLOAT;
 
     shadow_map_pass = rhi->CreateGraphicsPipeline(graphics_pass_ci);
-    shadow_map_pass->SetGraphicsShader(shadow_map_vs, shadow_map_ps);
+    shadow_map_pass->SetShader(shadow_map_ps);
+    shadow_map_pass->SetShader(shadow_map_ps);
 
 }
 ShadowMapData::~ShadowMapData() noexcept {}

@@ -59,6 +59,7 @@ const std::filesystem::path get(const Type type, const std::filesystem::path &fi
     // Check for relative paths
     auto it = relative_paths.find(type);
 
+    // FIXME(hylu): remove exception
     if (relative_paths.size() < Type::TotalRelativePathTypes) {
         throw std::runtime_error("Platform hasn't initialized the paths correctly");
     } else if (it == relative_paths.end()) {
@@ -69,9 +70,9 @@ const std::filesystem::path get(const Type type, const std::filesystem::path &fi
 
     auto path = get_external_storage_directory() / it->second;
 
-    if (fs::is_directory(path)!=false) {
-        create_path(get_external_storage_directory(), it->second);
-    }
+    //if (fs::is_directory(path)!=false) {
+    //    create_path(get_external_storage_directory(), it->second);
+    //}
 
     return path / file;
 }
@@ -88,15 +89,15 @@ void create_directory(const std::filesystem::path &path) {
 
 bool is_file(const std::filesystem::path &filename) { return std::filesystem::is_regular_file(filename); }
 
-void create_path(const std::filesystem::path &root, const std::filesystem::path &path) {
-    auto str = path.string();
-    for (auto it = str.begin(); it != str.end(); ++it) {
-        it = std::find(it, path.string().end(), '/');
-        auto dir_path = (str.begin(), it);
-        std::filesystem::path out_path = root / dir_path;
-        fs::create_directory(out_path);
-    }
-}
+//void create_path(const std::filesystem::path &root, const std::filesystem::path &path) {
+//    auto str = path.string();
+//    for (auto it = str.begin(); it != str.end(); ++it) {
+//        it = std::find(it, path.string().end(), '/');
+//        auto dir_path = (str.begin(), it);
+//        std::filesystem::path out_path = root / dir_path;
+//        fs::create_directory(out_path);
+//    }
+//}
 
 Container::String read_text_file(const std::filesystem::path filename) {
     Container::Array<Container::String> data;

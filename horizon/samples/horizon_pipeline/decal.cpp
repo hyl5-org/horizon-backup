@@ -78,7 +78,8 @@ DecalData::DecalData(Backend::RHI *rhi, SceneManager *scene_manager, GeometryDat
     graphics_pass_ci.render_target_formats.depth_stencil_format = geometry_data->depth->GetTexture()->m_format;
 
     decal_pass = rhi->CreateGraphicsPipeline(graphics_pass_ci);
-    decal_pass->SetGraphicsShader(decal_vs, decal_ps);
+    decal_pass->SetShader(decal_vs);
+    decal_pass->SetShader(decal_ps);
 
     scene_depth_texture = rhi->CreateTexture(
         TextureCreateInfo{DescriptorType::DESCRIPTOR_TYPE_TEXTURE, ResourceState::RESOURCE_STATE_SHADER_RESOURCE,

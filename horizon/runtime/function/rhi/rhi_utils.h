@@ -386,24 +386,6 @@ struct DrawParam {
 
 enum class ResourceUpdateFrequency { NONE, PER_FRAME, PER_BATCH, PER_DRAW, BINDLESS, USER_DEFINED1 };
 
-struct DescriptorDesc {
-   DescriptorType type{};
-   u32 vk_binding{};
-   Container::String dx_reg{}; // todo : type -> reg type
-};
-
-struct PushConstantDesc {
-    u32 size;
-    u32 offset;
-    u32 shader_stages;
-};
-
-struct RootSignatureDesc {
-   Container::FixedArray<Container::HashMap<Container::String, DescriptorDesc>, DESCRIPTOR_SET_UPDATE_FREQUENCIES> descriptors{};
-   Container::HashMap<Container::String, PushConstantDesc> push_constants;
-};
-
-
 u32 GetStrideFromVertexAttributeDescription(VertexAttribFormat format, u32 portions);
 
 struct VkPipelineLayoutDesc {

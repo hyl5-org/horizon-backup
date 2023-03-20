@@ -100,7 +100,7 @@ template <u32 dimension_m, u32 dimension_n, typename T = f32> class Matrix {
     }
 
   private:
-    std::array<T, dimension_m * dimension_n> e{}; // row major
+    Container::FixedArray<T, dimension_m * dimension_n> e{}; // row major
 };
 
 } // namespace Horizon::math

@@ -267,7 +267,7 @@ void ShaderCompiler::InternalCompile(const Container::String &hlsl_text, const S
 
     if (compile_args.target_api == ShaderTargetAPI::SPIRV) {
         compilation_arguments.push_back(L"-spirv");
-        compilation_arguments.push_back(L"-fspv-target-env=vulkan1.3");
+        compilation_arguments.push_back(L"-fspv-target-env=universal1.5");
         //compilation_arguments.push_back(L"-fspv-reflect");
     }
 

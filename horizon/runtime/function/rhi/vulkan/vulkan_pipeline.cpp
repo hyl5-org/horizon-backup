@@ -2,29 +2,67 @@
 
 #include <algorithm>
 
+#include "runtime/function/rhi/vulkan/vulkan_pipeline_layout.h"
 #include "runtime/function/rhi/vulkan/vulkan_shader.h"
 
 namespace Horizon::Backend {
 
-VulkanPipeline::VulkanPipeline(const VulkanRendererContext &context, const GraphicsPipelineCreateInfo &create_info) noexcept
-    : m_context(context){
+static const char* GetEntryPoint(ShaderType type) {
+    switch (type) {
+    case Horizon::ShaderType::VERTEX_SHADER:
+        return "VS_MAIN";
+    case Horizon::ShaderType::PIXEL_SHADER:
+        return "PS_MAIN";
+    case Horizon::ShaderType::COMPUTE_SHADER:
+        return "CS_MAIN";
+    default:
+        break;
+    }
+    return "";
+}
+
+VulkanPipeline::VulkanPipeline(const VulkanRendererContext &context, const DescriptorPool &t_descriptor_pool,
+                               const GraphicsPipelineCreateInfo &create_info) noexcept
+    : m_context(context), m_descriptor_pool(t_descriptor_pool) {
     m_create_info.type = PipelineType::GRAPHICS;
     m_create_info.gpci = const_cast<GraphicsPipelineCreateInfo *>(&create_info);
 }
 
-VulkanPipeline::VulkanPipeline(const VulkanRendererContext &context, const ComputePipelineCreateInfo &create_info) noexcept
-    : m_context(context){
+VulkanPipeline::VulkanPipeline(const VulkanRendererContext &context, const DescriptorPool &t_descriptor_pool,
+                               const ComputePipelineCreateInfo &create_info) noexcept
+    : m_context(context), m_descriptor_pool(t_descriptor_pool) {
+
     m_create_info.type = PipelineType::COMPUTE;
     m_create_info.cpci = const_cast<ComputePipelineCreateInfo *>(&create_info);
 }
 
 VulkanPipeline::~VulkanPipeline() noexcept {
     vkDestroyPipeline(m_context.device, m_pipeline, nullptr);
-    vkDestroyPipelineLayout(m_context.device, m_pipeline_layout, nullptr);
+    m_pipeline_layout.release();
 }
-void VulkanPipeline::SetShader(Shader *shader) {
-    // check pipelinetype
+void VulkanPipeline::SetShader(Shader *shader) noexcept {
+    // check pipeline type
+    //auto CheckCapability = [&](ShaderType t_shader_type, PipelineType t_pipeline_type) -> bool { return true; };
+    //if (CheckCapability(shader->GetType(), m_create_info.type) == false) {
+    //    return;
+    //}
     shaders[static_cast<u32>(shader->GetType())] = shader;
+}
+
+DescriptorSet *VulkanPipeline::GetDescriptorSet(ResourceUpdateFrequency frequency) {
+    if (b_created == false) {
+        Create();
+    }
+    for (auto &set_layout : m_pipeline_layout->GetDescriptorSetLayouts()) {
+        if (set_layout->GetIndex() != static_cast<u32>(frequency)) {
+            continue;
+        }
+        VkDescriptorSet set = m_descriptor_pool.AllocateDescriptorSet(set_layout->get());
+        
+        // leaked
+        return Memory::Alloc<VulkanDescriptorSet>(m_context, frequency, m_pipeline_layout->GetSetResources(set_layout->GetIndex()), set);
+    }
+    return nullptr;
 }
 
 //DescriptorSet *VulkanPipeline::GetDescriptorSet(ResourceUpdateFrequency frequency) {
@@ -134,31 +172,26 @@ void VulkanPipeline::SetShader(Shader *shader) {
 //    shader->descriptor_bindings[static_cast<u32>(frequency)].clear();
 //}
 
-//Container::HashMap<Container::String, VkDescriptorSetLayoutBinding>
-//VulkanPipeline::GetDescriptorSetLayoutBinding(ResourceUpdateFrequency frequency) noexcept {
-//    Container::HashMap<Container::String, VkDescriptorSetLayoutBinding> pipeline_descriptor_set_layout_binding{};
-//    Container::Array<Container::String>
-//    if (m_create_info.type == PipelineType::GRAPHICS) {
-//        ParseRootSignatureFromShader(reinterpret_cast<VulkanShader *>(m_vs), frequency,
-//                                     pipeline_descriptor_set_layout_binding);
-//        ParseRootSignatureFromShader(reinterpret_cast<VulkanShader *>(m_ps), frequency,
-//                                     pipeline_descriptor_set_layout_binding);
-//    } else if (m_create_info.type == PipelineType::COMPUTE) {
-//        ParseRootSignatureFromShader(reinterpret_cast<VulkanShader *>(m_cs), frequency,
-//                                     pipeline_descriptor_set_layout_binding);
-//    }
-//    //return pipeline_descriptor_set_layout_binding;
-//    return pipeline_descriptor_set_layout_binding;
-//}
-
 void VulkanPipeline::Create() {
     // crete descriptorset layout
     // crete pipeline layout
-    //create pipeline
+    CreatePipelineLayout();
+    //create pipelin
+    switch (m_create_info.type) {
+    case Horizon::PipelineType::GRAPHICS:
+        CreateGraphicsPipeline();
+        break;
+    case Horizon::PipelineType::COMPUTE:
+        CreateComputePipeline();
+        break;
+    case Horizon::PipelineType::RAY_TRACING:
+        break;
+    default:
+        break;
+    }
 }
 
 void VulkanPipeline::CreateGraphicsPipeline() {
-
     auto ci = m_create_info.gpci;
     {
         auto stack_memory = Memory::GetStackMemoryResource(4096);
@@ -184,22 +217,17 @@ void VulkanPipeline::CreateGraphicsPipeline() {
         Container::Array<VkPipelineColorBlendAttachmentState> color_blend_attachment_state(&stack_memory);
         // shader stage
         {
-
-            shader_stage_create_infos.reserve(2);
-            {
-                auto vs = reinterpret_cast<VulkanShader *>(m_vs);
-
-                shader_stage_create_infos.emplace_back(VkPipelineShaderStageCreateInfo{
-                    VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, nullptr, 0, ToVkShaderStageBit(vs->GetType()),
-                    vs->m_shader_module, "main", nullptr});
-
-                auto ps = reinterpret_cast<VulkanShader *>(m_ps);
-
-                shader_stage_create_infos.emplace_back(VkPipelineShaderStageCreateInfo{
-                    VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, nullptr, 0, ToVkShaderStageBit(ps->GetType()),
-                    ps->m_shader_module, "main", nullptr});
+            for (u32 i = 0; i < shaders.size(); i++) {
+                if (shaders[i] == nullptr) {
+                    continue;
+                }
+                VkPipelineShaderStageCreateInfo create_info{};
+                create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+                shader_stage_create_infos.push_back(VkPipelineShaderStageCreateInfo{
+                    VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, nullptr, 0,
+                    ToVkShaderStageBit(shaders[i]->GetType()),
+                    reinterpret_cast<VulkanShader *>(shaders[i])->m_shader_module, GetEntryPoint(shaders[i]->GetType()), nullptr});
             }
-
             graphics_pipeline_create_info.stageCount = static_cast<u32>(shader_stage_create_infos.size());
             graphics_pipeline_create_info.pStages = shader_stage_create_infos.data();
         }
@@ -377,7 +405,7 @@ void VulkanPipeline::CreateGraphicsPipeline() {
         graphics_pipeline_create_info.pNext = &rendering_create_info;
         // graphics_pipeline_create_info.renderPass = VK_NULL_HANDLE;
 
-        graphics_pipeline_create_info.layout = m_pipeline_layout;
+        graphics_pipeline_create_info.layout = m_pipeline_layout->get();
 
         CHECK_VK_RESULT(vkCreateGraphicsPipelines(m_context.device, nullptr, 1, &graphics_pipeline_create_info, nullptr,
                                                   &m_pipeline));
@@ -385,22 +413,19 @@ void VulkanPipeline::CreateGraphicsPipeline() {
 }
 
 void VulkanPipeline::CreateComputePipeline() {
-    assert(m_cs != nullptr);
-
-    auto cs = reinterpret_cast<VulkanShader *>(m_cs);
     VkPipelineShaderStageCreateInfo shader_stage_create_info{};
     shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shader_stage_create_info.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-    shader_stage_create_info.module = cs->m_shader_module;
-    shader_stage_create_info.pName = "main";
+    shader_stage_create_info.module =
+        reinterpret_cast<VulkanShader *>(shaders[static_cast<u32>(ShaderType::COMPUTE_SHADER)])->m_shader_module;
+    shader_stage_create_info.pName = GetEntryPoint(ShaderType::COMPUTE_SHADER);
 
     VkComputePipelineCreateInfo compute_pipeline_create_info{};
 
     // cache
-
     compute_pipeline_create_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
     compute_pipeline_create_info.flags = 0;
-    compute_pipeline_create_info.layout = m_pipeline_layout;
+    compute_pipeline_create_info.layout = m_pipeline_layout->get();
     compute_pipeline_create_info.stage = shader_stage_create_info;
     compute_pipeline_create_info.basePipelineHandle = nullptr;
     compute_pipeline_create_info.basePipelineIndex = 0;
@@ -410,90 +435,16 @@ void VulkanPipeline::CreateComputePipeline() {
 
 void VulkanPipeline::CreatePipelineLayout() {
     Container::Array<VulkanShader *> shader_modules;
-    switch (m_create_info.type) {
-    case Horizon::PipelineType::GRAPHICS:
-        shader_modules.push_back(dynamic_cast<VulkanShader *>(m_vs));
-        shader_modules.push_back(dynamic_cast<VulkanShader *>(m_ps));
-        break;
-    case Horizon::PipelineType::COMPUTE:
-        shader_modules.push_back(dynamic_cast<VulkanShader *>(m_cs));
-        break;
-    default:
-        break;
-    }
-    for (auto *shader_module : shader_modules) {
-        for (const auto &shader_resource : shader_module->GetResources()) {
-            Container::String key = shader_resource.name;
+    // shader stage
 
-            // Since 'Input' and 'Output' resources can have the same name, we modify the key string
-            if (shader_resource.type == ShaderResourceType::Input ||
-                shader_resource.type == ShaderResourceType::Output) {
-                key = Container::String{std::to_string(shader_resource.stages)} + "_" + key;
-            }
-
-            auto it = shader_resources.find(key);
-
-            if (it != shader_resources.end()) {
-                // Append stage flags if resource already exists
-                it->second.stages |= shader_resource.stages;
-            } else {
-                // Create a new entry in the map
-                shader_resources.emplace(key, shader_resource);
-            }
+    for (u32 i = 0; i < shaders.size(); i++) {
+        if (shaders[i] == nullptr) {
+            continue;
         }
+        shader_modules.push_back(reinterpret_cast<VulkanShader *>(shaders[i]));
     }
 
-    // Sift through the map of name indexed shader resources
-    // Separate them into their respective sets
-    for (auto &it : shader_resources) {
-        auto &shader_resource = it.second;
-
-        // Find binding by set index in the map.
-        auto it2 = shader_sets.find(shader_resource.set);
-
-        if (it2 != shader_sets.end()) {
-            // Add resource to the found set index
-            it2->second.push_back(shader_resource);
-        } else {
-            // Create a new set index and with the first resource
-            shader_sets.emplace(shader_resource.set, std::vector<ShaderResource>{shader_resource});
-        }
-    }
-
-    // Create a descriptor set layout for each shader set in the shader modules
-    for (auto &shader_set_it : shader_sets) {
-        descriptor_set_layouts.emplace_back(&device.get_resource_cache().request_descriptor_set_layout(
-            shader_set_it.first, shader_modules, shader_set_it.second));
-    }
-
-    // Collect all the descriptor set layout handles, maintaining set order
-    std::vector<VkDescriptorSetLayout> descriptor_set_layout_handles;
-    for (uint32_t i = 0; i < descriptor_set_layouts.size(); ++i) {
-        if (descriptor_set_layouts[i]) {
-            descriptor_set_layout_handles.push_back(descriptor_set_layouts[i]->get_handle());
-        } else {
-            descriptor_set_layout_handles.push_back(VK_NULL_HANDLE);
-        }
-    }
-
-    // Collect all the push constant shader resources
-    std::vector<VkPushConstantRange> push_constant_ranges;
-    for (auto &push_constant_resource : get_resources(ShaderResourceType::PushConstant)) {
-        push_constant_ranges.push_back(
-            {push_constant_resource.stages, push_constant_resource.offset, push_constant_resource.size});
-    }
-
-    VkPipelineLayoutCreateInfo create_info{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-
-    create_info.setLayoutCount = static_cast<u32(descriptor_set_layout_handles.size());
-    create_info.pSetLayouts = descriptor_set_layout_handles.data();
-    create_info.pushConstantRangeCount = to_u32(push_constant_ranges.size());
-    create_info.pPushConstantRanges = push_constant_ranges.data();
-
-    // Create the Vulkan pipeline layout handle
-    CHECK_VK_RESULT(vkCreatePipelineLayout(m_context.device, &create_info, nullptr, &m_pipeline_layout));
-
+    m_pipeline_layout = Memory::MakeUnique<PipelineLayout>(m_context, shader_modules);
 }
-
 
 } // namespace Horizon::Backend

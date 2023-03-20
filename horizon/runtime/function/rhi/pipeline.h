@@ -21,15 +21,7 @@ class Pipeline {
 
     PipelineType GetType() const noexcept;
 
-    virtual void SetComputeShader(Shader *vs) = 0;
-    virtual void SetGraphicsShader(Shader *vs, Shader *ps) = 0;
-
-    virtual DescriptorSet *GetDescriptorSet(ResourceUpdateFrequency frequency) = 0;
-
-  protected:
-    //void ParseRootSignature(); 
-    //virtual void ParseRootSignatureFromShader(Shader* shader) = 0;  
-
+    virtual void SetShader(Shader *shader) noexcept = 0;
   protected:
     // array contain all kinds of shaders
     Container::FixedArray<Shader *, static_cast<u64>(ShaderType::SHADER_TYPE_COUNT)> shaders{};

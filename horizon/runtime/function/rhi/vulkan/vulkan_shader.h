@@ -80,7 +80,7 @@ struct ShaderResource {
 //  public:
 //    ShaderVariant() = default;
 //
-//    ShaderVariant(std::string &&preamble, std::vector<std::string> &&processes);
+//    ShaderVariant(Container::String &&preamble, Container::Array<Container::String> &&processes);
 //
 //    size_t get_id() const;
 //
@@ -88,19 +88,19 @@ struct ShaderResource {
 //	 * @brief Add definitions to shader variant
 //	 * @param definitions Vector of definitions to add to the variant
 //	 */
-//    void add_definitions(const std::vector<std::string> &definitions);
+//    void add_definitions(const Container::Array<Container::String> &definitions);
 //
 //    /**
 //	 * @brief Adds a define macro to the shader
 //	 * @param def String which should go to the right of a define directive
 //	 */
-//    void add_define(const std::string &def);
+//    void add_define(const Container::String &def);
 //
 //    /**
 //	 * @brief Adds an undef macro to the shader
 //	 * @param undef String which should go to the right of an undef directive
 //	 */
-//    void add_undefine(const std::string &undef);
+//    void add_undefine(const Container::String &undef);
 //
 //    /**
 //	 * @brief Specifies the size of a named runtime array for automatic reflection. If already specified, overrides the size.
@@ -108,51 +108,29 @@ struct ShaderResource {
 //	 * @param size Integer specifying the wanted size of the runtime array (in number of elements, not size in bytes), used for automatic allocation of buffers.
 //	 * See get_declared_struct_size_runtime_array() in spirv_cross.h
 //	 */
-//    void add_runtime_array_size(const std::string &runtime_array_name, size_t size);
+//    void add_runtime_array_size(const Container::String &runtime_array_name, size_t size);
 //
-//    void set_runtime_array_sizes(const std::unordered_map<std::string, size_t> &sizes);
+//    void set_runtime_array_sizes(const Container::HashMap<Container::String, size_t> &sizes);
 //
-//    const std::string &get_preamble() const;
+//    const Container::String &get_preamble() const;
 //
-//    const std::vector<std::string> &get_processes() const;
+//    const Container::Array<Container::String> &get_processes() const;
 //
-//    const std::unordered_map<std::string, size_t> &get_runtime_array_sizes() const;
+//    const Container::HashMap<Container::String, size_t> &get_runtime_array_sizes() const;
 //
 //    void clear();
 //
 //  private:
 //    size_t id;
 //
-//    std::string preamble;
+//    Container::String preamble;
 //
-//    std::vector<std::string> processes;
+//    Container::Array<Container::String> processes;
 //
-//    std::unordered_map<std::string, size_t> runtime_array_sizes;
+//    Container::HashMap<Container::String, size_t> runtime_array_sizes;
 //
 //    void update_id();
 //};
-
-class ShaderSource {
-  public:
-    ShaderSource() = default;
-
-    ShaderSource(const std::string &filename);
-
-    size_t get_id() const;
-
-    const std::string &get_filename() const;
-
-    void set_source(const std::string &source);
-
-    const std::string &get_source() const;
-
-  private:
-    size_t id;
-
-    std::string filename;
-
-    std::string source;
-};
 
 
 class VulkanShader : public Shader {
@@ -166,7 +144,7 @@ class VulkanShader : public Shader {
     VulkanShader &operator=(VulkanShader &&rhs) noexcept = delete;
 
     public:
-    const std::vector<ShaderResource> &GetResources() { return resources; }
+    const Container::Array<ShaderResource> &GetResources() { return resources; }
   public:
     const VulkanRendererContext &m_context{};
     VkShaderModule m_shader_module{};
@@ -177,14 +155,14 @@ class VulkanShader : public Shader {
     VkShaderStageFlagBits stage{};
 
     ///// Name of the main function
-    //std::string entry_point;
+    //Container::String entry_point;
 
     ///// Human-readable name for the shader
-    //std::string debug_name;
+    //Container::String debug_name;
 
-    std::vector<ShaderResource> resources;
+    Container::Array<ShaderResource> resources;
 
-    //std::string info_log;
+    //Container::String info_log;
 };
 
 } // namespace Horizon::Backend

@@ -411,8 +411,7 @@ void TextureLoader::LoadPNG(const std::filesystem::path &path, TextureDataDesc &
 //void TextureLoader::LoadKTX(const std::filesystem::path &path, TextureDataDesc &texture_info) {}
 
 void TextureLoader::LoadDDS(const std::filesystem::path &path, TextureDataDesc &texture_info) {
-
-    auto raw_data = fs::read_binary_file(path.string().c_str(), 1);
+    Container::Array<u8> raw_data = fs::read_binary_file(path.string().c_str(), 0);
     if (raw_data.empty()) {
         return;
     }

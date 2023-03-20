@@ -1,26 +1,30 @@
 #include "vulkan_descriptor_set.h"
 
+#include "runtime/function/rhi/vulkan/vulkan_descriptor_set_layout.h"
+
 namespace Horizon::Backend {
 
 VulkanDescriptorSet::VulkanDescriptorSet(const VulkanRendererContext &context, ResourceUpdateFrequency frequency,
-                                         const Container::HashMap<Container::String, DescriptorDesc> &write_descs,
+                                         const Container::HashMap<Container::String, ShaderResource> &t_set_resources,
                                          VkDescriptorSet set) noexcept
-    : DescriptorSet(frequency), m_context(context), write_descs(write_descs), m_set(set) {}
+    : DescriptorSet(frequency), m_context(context), m_set_resources(t_set_resources), m_set(set) {}
 
 void VulkanDescriptorSet::SetResource(Buffer *buffer, const Container::String &resource_name) {
-    auto res = write_descs.find(resource_name);
-    if (res == write_descs.end()) {
+    auto res = m_set_resources.find(resource_name);
+    if (res == m_set_resources.end()) {
         LOG_ERROR("resource {} is not declared in this descriptorset", resource_name);
         return;
     }
 
-    auto vk_buffer = reinterpret_cast<VulkanBuffer *>(buffer);
+    VulkanBuffer *vk_buffer = reinterpret_cast<VulkanBuffer *>(buffer);
+
+    VkDescriptorType descriptor_type = DescriptorSetLayout::find_descriptor_type(res->second.type, false);
 
     VkWriteDescriptorSet write{};
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     write.pNext = nullptr;
-    write.dstBinding = res->second.vk_binding;
-    write.descriptorType = util_to_vk_descriptor_type(res->second.type);
+    write.dstBinding = res->second.binding;
+    write.descriptorType = descriptor_type;
     write.descriptorCount = 1;
     write.dstSet = m_set;
     write.dstArrayElement = 0;
@@ -31,40 +35,40 @@ void VulkanDescriptorSet::SetResource(Buffer *buffer, const Container::String &r
 }
 
 void VulkanDescriptorSet::SetResource(Texture *texture, const Container::String &resource_name) {
-    auto res = write_descs.find(resource_name);
-    if (res == write_descs.end()) {
+    auto res = m_set_resources.find(resource_name);
+    if (res == m_set_resources.end()) {
         LOG_ERROR("resource {} is not declared in this descriptorset", resource_name);
         return;
     }
-    auto vk_texture = reinterpret_cast<VulkanTexture *>(texture);
-
+    VulkanTexture *vk_texture = reinterpret_cast<VulkanTexture *>(texture);
+    VkDescriptorType descriptor_type = DescriptorSetLayout::find_descriptor_type(res->second.type, false);
     VkWriteDescriptorSet write{};
 
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     write.pNext = nullptr;
-    write.dstBinding = res->second.vk_binding;
-    write.descriptorType = util_to_vk_descriptor_type(res->second.type);
+    write.dstBinding = res->second.binding;
+    write.descriptorType = descriptor_type;
     write.descriptorCount = 1;
     write.dstSet = m_set;
     write.dstArrayElement = 0;
-    write.pImageInfo = vk_texture->GetDescriptorImageInfo(res->second.type);
+    write.pImageInfo = vk_texture->GetDescriptorImageInfo(descriptor_type);
     writes.push_back(write);
 }
 
 void VulkanDescriptorSet::SetResource(Sampler *sampler, const Container::String &resource_name) {
-    auto res = write_descs.find(resource_name);
-    if (res == write_descs.end()) {
+    auto res = m_set_resources.find(resource_name);
+    if (res == m_set_resources.end()) {
         LOG_ERROR("resource {} is not declared in this descriptorset", resource_name);
         return;
     }
-    auto vk_sampler = reinterpret_cast<VulkanSampler *>(sampler);
-
+    VulkanSampler *vk_sampler = reinterpret_cast<VulkanSampler *>(sampler);
+    VkDescriptorType descriptor_type = DescriptorSetLayout::find_descriptor_type(res->second.type, false);
     VkWriteDescriptorSet write{};
 
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     write.pNext = nullptr;
-    write.dstBinding = res->second.vk_binding;
-    write.descriptorType = util_to_vk_descriptor_type(res->second.type); // sampler
+    write.dstBinding = res->second.binding;
+    write.descriptorType = descriptor_type; // sampler
     write.descriptorCount = 1;
     write.dstSet = m_set;
     write.dstArrayElement = 0;
@@ -72,13 +76,14 @@ void VulkanDescriptorSet::SetResource(Sampler *sampler, const Container::String 
     writes.push_back(write);
 }
 
-void VulkanDescriptorSet::SetBindlessResource(Container::Array<Buffer *> &resource, const Container::String &resource_name) {
-    assert(update_frequency == ResourceUpdateFrequency::BINDLESS);
-    auto res = write_descs.find(resource_name);
-    if (res == write_descs.end()) {
+void VulkanDescriptorSet::SetResource(Container::Array<Buffer *> &resource, const Container::String &resource_name) {
+
+    auto res = m_set_resources.find(resource_name);
+    if (res == m_set_resources.end()) {
         LOG_ERROR("resource {} is not declared in this descriptorset", resource_name);
         return;
     }
+    VkDescriptorType descriptor_type = DescriptorSetLayout::find_descriptor_type(res->second.type, false);
 
     auto &buffer_descriptors = bindless_buffer_descriptors[resource_name];
 
@@ -90,9 +95,9 @@ void VulkanDescriptorSet::SetBindlessResource(Container::Array<Buffer *> &resour
 
     VkWriteDescriptorSet write{};
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write.dstBinding = res->second.vk_binding;
+    write.dstBinding = res->second.binding;
     write.dstArrayElement = 0;
-    write.descriptorType = write.descriptorType = util_to_vk_descriptor_type(res->second.type);
+    write.descriptorType = write.descriptorType = descriptor_type;
 
     write.descriptorCount = static_cast<uint32_t>(resource.size());
     write.pBufferInfo = buffer_descriptors.data();
@@ -100,28 +105,27 @@ void VulkanDescriptorSet::SetBindlessResource(Container::Array<Buffer *> &resour
     writes.push_back(write);
 }
 
-void VulkanDescriptorSet::SetBindlessResource(Container::Array<Texture *> &resource, const Container::String &resource_name) {
+void VulkanDescriptorSet::SetResource(Container::Array<Texture *> &resource, const Container::String &resource_name) {
 
-    assert(update_frequency == ResourceUpdateFrequency::BINDLESS);
-    auto res = write_descs.find(resource_name);
-    if (res == write_descs.end()) {
+    auto res = m_set_resources.find(resource_name);
+    if (res == m_set_resources.end()) {
         LOG_ERROR("resource {} is not declared in this descriptorset", resource_name);
         return;
     }
 
     auto &texture_descriptors = bindless_image_descriptors[resource_name];
-
+    VkDescriptorType descriptor_type = DescriptorSetLayout::find_descriptor_type(res->second.type, false);
     for (auto &texture : resource) {
         auto vk_texture = reinterpret_cast<VulkanTexture *>(texture);
 
-        texture_descriptors.push_back(*vk_texture->GetDescriptorImageInfo(res->second.type));
+        texture_descriptors.push_back(*vk_texture->GetDescriptorImageInfo(descriptor_type));
     }
 
     VkWriteDescriptorSet write{};
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write.dstBinding = res->second.vk_binding;
+    write.dstBinding = res->second.binding;
     write.dstArrayElement = 0;
-    write.descriptorType = write.descriptorType = util_to_vk_descriptor_type(res->second.type);
+    write.descriptorType = descriptor_type;
 
     write.descriptorCount = static_cast<uint32_t>(resource.size());
     write.pBufferInfo = 0;
@@ -130,16 +134,16 @@ void VulkanDescriptorSet::SetBindlessResource(Container::Array<Texture *> &resou
     writes.push_back(write);
 }
 
-void VulkanDescriptorSet::SetBindlessResource(Container::Array<Sampler *> &resource, const Container::String &resource_name) {
-    assert(update_frequency == ResourceUpdateFrequency::BINDLESS);
-    auto res = write_descs.find(resource_name);
-    if (res == write_descs.end()) {
+void VulkanDescriptorSet::SetResource(Container::Array<Sampler *> &resource, const Container::String &resource_name) {
+
+    auto res = m_set_resources.find(resource_name);
+    if (res == m_set_resources.end()) {
         LOG_ERROR("resource {} is not declared in this descriptorset", resource_name);
         return;
     }
 
     auto &sampler_descriptors = bindless_sampler_descriptors[resource_name];
-
+    VkDescriptorType descriptor_type = DescriptorSetLayout::find_descriptor_type(res->second.type, false);
     for (auto &sampler : resource) {
         auto vk_sampler = reinterpret_cast<VulkanSampler *>(sampler);
 
@@ -148,9 +152,9 @@ void VulkanDescriptorSet::SetBindlessResource(Container::Array<Sampler *> &resou
 
     VkWriteDescriptorSet write{};
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write.dstBinding = res->second.vk_binding;
+    write.dstBinding = res->second.binding;
     write.dstArrayElement = 0;
-    write.descriptorType = write.descriptorType = util_to_vk_descriptor_type(res->second.type);
+    write.descriptorType = descriptor_type;
 
     write.descriptorCount = static_cast<uint32_t>(resource.size());
     write.pBufferInfo = 0;

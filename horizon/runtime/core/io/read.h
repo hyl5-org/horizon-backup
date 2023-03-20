@@ -27,14 +27,14 @@ template <class T> inline void Read(std::istringstream &is, Container::Set<T> &v
     }
 }
 
-template <class T> inline void Read(std::istringstream &is, std::vector<T> &value) {
+template <class T> inline void Read(std::istringstream &is, Container::Array<T> &value) {
     u64 size;
     Read(is, size);
     value.resize(size);
     is.read(reinterpret_cast<char *>(value.data()), value.size() * sizeof(T));
 }
 
-template <class T, class S> inline void Read(std::istringstream &is, std::map<T, S> &value) {
+template <class T, class S> inline void Read(std::istringstream &is, Container::Array<T, S> &value) {
     u64 size;
     Read(is, size);
 

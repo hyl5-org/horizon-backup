@@ -1,1 +1,2 @@
 add_subdirectory(horizon_pipeline)
+add_subdirectory(app1)

@@ -21,7 +21,7 @@
 
 namespace Horizon {
 
-constexpr Container::FixedArray<char, 4> hsb_header{'h', 's', 'b', '1'};
+static constexpr Container::FixedArray<char, 4> hsb_header{'h', 's', 'b', '1'};
 
 struct ShaderBinaryHeader {
     Container::FixedArray<char, 4> header;

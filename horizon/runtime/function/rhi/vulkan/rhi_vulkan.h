@@ -13,7 +13,7 @@
 #include "runtime/function/rhi/vulkan/vulkan_utils.h"
 #include "runtime/function/rhi/vulkan/vulkan_config.h"
 #include "runtime/function/rhi/vulkan/vulkan_buffer.h"
-#include "runtime/function/rhi/vulkan/vulkan_descriptor_set_allocator.h"
+#include "runtime/function/rhi/vulkan/vulkan_descriptor_pool.h"
 #include "runtime/function/rhi/vulkan/vulkan_swap_chain.h"
 #include "runtime/function/rhi/vulkan/vulkan_texture.h"
 
@@ -91,11 +91,12 @@ class RHIVulkan : public RHI {
     void InitializeVMA();
     void CreateSyncObjects();
     VkFence GetFence(CommandQueueType type) noexcept;
+    void CreateDescriptorPool() noexcept;
 
   private:
     VulkanRendererContext m_vulkan{};
     SwapChainSemaphoreContext semaphore_ctx{};
-    VulkanDescriptorSetAllocator *m_descriptor_set_allocator{};
+    Memory::UniquePtr<DescriptorPool> m_descriptor_pool{};
     Container::FixedArray<Container::Array<VkFence>, 3> fences{};
     Container::FixedArray<u32, 3> fence_index{};
 };

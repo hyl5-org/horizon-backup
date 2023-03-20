@@ -62,11 +62,13 @@ VulkanTexture::~VulkanTexture() noexcept {
     }
 }
 
-VkDescriptorImageInfo *VulkanTexture::GetDescriptorImageInfo(DescriptorType descriptor_type) noexcept {
+VkDescriptorImageInfo *VulkanTexture::GetDescriptorImageInfo(VkDescriptorType descriptor_type) noexcept {
     descriptor_image_info.imageView = m_image_view;
-    if (DescriptorType::DESCRIPTOR_TYPE_RW_TEXTURE == (descriptor_type & DescriptorType::DESCRIPTOR_TYPE_RW_TEXTURE)) {
+    if (VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE ==
+        (descriptor_type )) {
         descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-    } else if (DescriptorType::DESCRIPTOR_TYPE_TEXTURE == (descriptor_type & DescriptorType::DESCRIPTOR_TYPE_TEXTURE)) {
+    } else if (VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE ==
+               (descriptor_type & DescriptorType::DESCRIPTOR_TYPE_TEXTURE)) {
         descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
     return &descriptor_image_info;

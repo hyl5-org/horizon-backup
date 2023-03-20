@@ -21,12 +21,12 @@ template <class T> inline void Write(std::ostringstream &os, const Container::Se
     }
 }
 
-template <class T> inline void Write(std::ostringstream &os, const std::vector<T> &value) {
+template <class T> inline void Write(std::ostringstream &os, const Container::Array<T> &value) {
     Write(os, value.size());
     os.write(reinterpret_cast<const char *>(value.data()), value.size() * sizeof(T));
 }
 
-template <class T, class S> inline void Write(std::ostringstream &os, const std::map<T, S> &value) {
+template <class T, class S> inline void Write(std::ostringstream &os, const Container::Map<T, S> &value) {
     Write(os, value.size());
 
     for (const std::pair<T, S> &item : value) {

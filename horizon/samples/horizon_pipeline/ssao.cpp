@@ -48,8 +48,9 @@ SSAOData::SSAOData(Backend::RHI *rhi) noexcept {
     char *end = reinterpret_cast<char *>(&ssao_noise_tex_val[ssao_noise_tex_val.size() - 1]);
     ssao_noise_tex_data_desc.raw_data = {begin, end};
 
-    ssao_pass->SetComputeShader(ssao_cs);
-    ssao_blur_pass->SetComputeShader(ssao_blur_cs);
+    ssao_pass->SetShader(ssao_cs);
+    ssao_blur_pass->SetShader(ssao_blur_cs);
+
 }
 
 SSAOData::SSAOData() noexcept {}

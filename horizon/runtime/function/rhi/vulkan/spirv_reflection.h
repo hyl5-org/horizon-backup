@@ -22,8 +22,9 @@
 #include <vector>
 
 #include <vulkan/vulkan.h>
-#include <spirv_cross/spirv_cross.hpp>
+// mismatch header
 
+#include <spirv_cross/spirv_cross.hpp>
 #include "runtime/function/rhi/vulkan/vulkan_shader.h"
 //#include "common/vk_common.h"
 //#include "core/shader_module.h"
@@ -38,18 +39,18 @@ class SPIRVReflection {
     /// @param[out] resources The list of reflected shader resources
     /// @param variant ShaderVariant used for reflection to specify the size of the runtime arrays in Storage Buffers
     bool reflect_shader_resources(VkShaderStageFlagBits stage, u32 *data, u64 size,
-                                  std::vector<ShaderResource> &resources);
-    bool reflect_shader_resources(VkShaderStageFlagBits stage, std::vector<u32> &&spirv,
-                                  std::vector<ShaderResource> &resources);
+                                  Container::Array<ShaderResource> &resources);
+    bool reflect_shader_resources(VkShaderStageFlagBits stage, Container::Array<u32> &spirv,
+                                  Container::Array<ShaderResource> &resources);
     
   private:
     void parse_shader_resources(const spirv_cross::Compiler &compiler, VkShaderStageFlagBits stage,
-                                std::vector<ShaderResource> &resources);
+                                Container::Array<ShaderResource> &resources);
 
     void parse_push_constants(const spirv_cross::Compiler &compiler, VkShaderStageFlagBits stage,
-                              std::vector<ShaderResource> &resources);
+                              Container::Array<ShaderResource> &resources);
 
     void parse_specialization_constants(const spirv_cross::Compiler &compiler, VkShaderStageFlagBits stage,
-                                        std::vector<ShaderResource> &resources);
+                                        Container::Array<ShaderResource> &resources);
 };
 } // namespace Horizon::Backend

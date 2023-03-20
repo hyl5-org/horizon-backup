@@ -23,10 +23,9 @@ class DescriptorSet {
     virtual void SetResource(Buffer *resource, const Container::String &resource_name) = 0;
     virtual void SetResource(Texture *resource, const Container::String &resource_name) = 0;
     virtual void SetResource(Sampler *resource, const Container::String &resource_name) = 0;
-
-    virtual void SetBindlessResource(Container::Array<Buffer *>& resource, const Container::String &resource_name) = 0;
-    virtual void SetBindlessResource(Container::Array<Texture *>& resource, const Container::String &resource_name) = 0;
-    virtual void SetBindlessResource(Container::Array<Sampler *>& resource, const Container::String &resource_name) = 0;
+    virtual void SetResource(Container::Array<Buffer *> &resource, const Container::String &resource_name) = 0;
+    virtual void SetResource(Container::Array<Texture *> &resource, const Container::String &resource_name) = 0;
+    virtual void SetResource(Container::Array<Sampler *> &resource, const Container::String &resource_name) = 0;
     virtual void Update() = 0;
 
   public:

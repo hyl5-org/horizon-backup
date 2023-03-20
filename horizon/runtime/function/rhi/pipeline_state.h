@@ -25,9 +25,9 @@
 //
 //namespace vkb {
 //struct VertexInputState {
-//    std::vector<VkVertexInputBindingDescription> bindings;
+//    Container::Array<VkVertexInputBindingDescription> bindings;
 //
-//    std::vector<VkVertexInputAttributeDescription> attributes;
+//    Container::Array<VkVertexInputAttributeDescription> attributes;
 //};
 //
 //struct InputAssemblyState {
@@ -121,7 +121,7 @@
 //
 //    VkLogicOp logic_op{VK_LOGIC_OP_CLEAR};
 //
-//    std::vector<ColorBlendAttachmentState> attachments;
+//    Container::Array<ColorBlendAttachmentState> attachments;
 //};
 //
 ///// Helper class to create specialization constants for a Vulkan pipeline. The state tracks a pipeline globally, and not per shader. Two shaders using the same constant_id will have the same data.
@@ -135,16 +135,16 @@
 //
 //    template <class T> void set_constant(uint32_t constant_id, const T &data);
 //
-//    void set_constant(uint32_t constant_id, const std::vector<uint8_t> &data);
+//    void set_constant(uint32_t constant_id, const Container::Array<uint8_t> &data);
 //
-//    void set_specialization_constant_state(const std::map<uint32_t, std::vector<uint8_t>> &state);
+//    void set_specialization_constant_state(const Container::Map<uint32_t, Container::Array<uint8_t>> &state);
 //
-//    const std::map<uint32_t, std::vector<uint8_t>> &get_specialization_constant_state() const;
+//    const Container::Map<uint32_t, Container::Array<uint8_t>> &get_specialization_constant_state() const;
 //
 //  private:
 //    bool dirty{false};
 //    // Map tracking state of the Specialization Constants
-//    std::map<uint32_t, std::vector<uint8_t>> specialization_constant_state;
+//    Container::Map<uint32_t, Container::Array<uint8_t>> specialization_constant_state;
 //};
 //
 //template <class T> inline void SpecializationConstantState::set_constant(std::uint32_t constant_id, const T &data) {
@@ -163,7 +163,7 @@
 //
 //    void set_render_pass(const RenderPass &render_pass);
 //
-//    void set_specialization_constant(uint32_t constant_id, const std::vector<uint8_t> &data);
+//    void set_specialization_constant(uint32_t constant_id, const Container::Array<uint8_t> &data);
 //
 //    void set_vertex_input_state(const VertexInputState &vertex_input_state);
 //

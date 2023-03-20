@@ -23,7 +23,6 @@ namespace Horizon::Backend {
 VulkanShader::VulkanShader(const VulkanRendererContext &context, ShaderType type,
                            const Container::Array<u8> &shader_binary_code) noexcept
     : Shader(type), m_context(context) {
-    shader_binary_code;
     ShaderBinaryHeader header{};
     std::memcpy(&header, shader_binary_code.data(), sizeof(ShaderBinaryHeader));
     if (header.header != hsb_header || header.shader_blob_offset != sizeof(ShaderBinaryHeader) ||
@@ -41,10 +40,9 @@ VulkanShader::VulkanShader(const VulkanRendererContext &context, ShaderType type
 
     // reflect descriptor from shader
     SPIRVReflection spirv_reflection;
-    std::vector<u32> arr(spirv_code_size / sizeof(u32));
-    memcpy(arr.data(), p_spirv_code, spirv_code_size);
-    spirv_reflection.reflect_shader_resources(ToVkShaderStageBit(type), static_cast<u32 *>(p_spirv_code),
-                                              spirv_code_size / sizeof(u32), resources);
+    u32 word_count = spirv_code_size / sizeof(u32);
+    spirv_reflection.reflect_shader_resources(ToVkShaderStageBit(type), static_cast<u32 *>(p_spirv_code), word_count,
+                                              resources);
 }
 
 VulkanShader::~VulkanShader() noexcept { vkDestroyShaderModule(m_context.device, m_shader_module, nullptr); }

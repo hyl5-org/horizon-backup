@@ -482,10 +482,10 @@ void VulkanCommandList::BindPipeline(Pipeline *pipeline) {
 
     if (pipeline->GetType() == PipelineType::GRAPHICS) {
         // TOOD: set viewport and scissor manually?
-        vkCmdSetViewport(m_command_buffer, 0, 1, &vk_pipeline->view_port);
-        vkCmdSetScissor(m_command_buffer, 0, 1, &vk_pipeline->scissor);
+        vkCmdSetViewport(m_command_buffer, 0, 1, &vk_pipeline->GetViewPort());
+        vkCmdSetScissor(m_command_buffer, 0, 1, &vk_pipeline->GetScissor());
     }
-    vkCmdBindPipeline(m_command_buffer, bind_point, vk_pipeline->m_pipeline);
+    vkCmdBindPipeline(m_command_buffer, bind_point, vk_pipeline->get());
 }
 
 void VulkanCommandList::BindPushConstant(Pipeline *pipeline, const Container::String &name, void *data) {
@@ -534,7 +534,7 @@ void VulkanCommandList::BindDescriptorSets(Pipeline *pipeline, DescriptorSet *se
 
     auto vk_set = reinterpret_cast<VulkanDescriptorSet *>(set);
 
-    vkCmdBindDescriptorSets(m_command_buffer, bind_point, vk_pipeline->m_pipeline_layout,
+    vkCmdBindDescriptorSets(m_command_buffer, bind_point, vk_pipeline->GetLayout(),
                             static_cast<u32>(set->update_frequency), 1, &vk_set->m_set, 0,
                             nullptr); // TODO(hylu): batch update
 }

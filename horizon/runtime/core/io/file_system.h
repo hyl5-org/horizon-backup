@@ -93,7 +93,7 @@ void create_directory(const std::filesystem::path &path);
  * @param root The root directory that the path is relative to
  * @param path A path in the format 'this/is/an/example/path/'
  */
-void create_path(const std::filesystem::path &root, const std::filesystem::path &path);
+//void create_path(const std::filesystem::path &root, const std::filesystem::path &path);
 
 /**
  * @brief Helper to read an asset file into a byte-array

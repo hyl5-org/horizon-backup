@@ -49,7 +49,7 @@ class Frustum {
     const Container::FixedArray<Vector<4>, 6> &get_planes() const;
 
   private:
-    std::array<Vector<4>, 6> planes;
+    Container::FixedArray<Vector<4>, 6> planes;
 };
 
 } // namespace Horizon
