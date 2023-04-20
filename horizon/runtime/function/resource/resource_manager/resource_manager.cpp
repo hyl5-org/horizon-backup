@@ -23,7 +23,7 @@ ResourceManager::ResourceManager(Backend::RHI *rhi, std::pmr::polymorphic_alloca
 ResourceManager::~ResourceManager() noexcept { ClearAllResources(); }
 
 Buffer *ResourceManager::CreateGpuBuffer(const BufferCreateInfo &buffer_create_info) {
-    auto buffer = m_rhi->CreateBuffer(buffer_create_info);
+    Buffer* buffer = m_rhi->CreateBuffer(buffer_create_info);
     allocated_buffers.emplace(buffer);
     return buffer;
 }
@@ -42,7 +42,7 @@ Buffer *ResourceManager::GetEmptyVertexBuffer() {
 }
 
 Mesh *ResourceManager::LoadMesh(const MeshDesc &desc, const std::filesystem::path& path) {
-    auto mesh = MeshLoader::Load(desc, path);
+    Mesh* mesh = MeshLoader::Load(desc, path);
     meshes.emplace(mesh);
     return mesh;
 }
@@ -92,7 +92,7 @@ void ResourceManager::DestroyGpuBuffer(Buffer *buffer) {
 }
 
 Texture *ResourceManager::CreateGpuTexture(const TextureCreateInfo &texture_create_info) {
-    auto texture = m_rhi->CreateTexture(texture_create_info);
+    Texture* texture = m_rhi->CreateTexture(texture_create_info);
     allocated_textures.emplace(texture);
     return texture;
 }

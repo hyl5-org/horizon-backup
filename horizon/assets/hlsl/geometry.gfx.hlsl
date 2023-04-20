@@ -7,10 +7,10 @@ RES(StructuredBuffer<MaterialDescription>, material_descriptions[], UPDATE_FREQ_
 
 RES(SamplerState, default_sampler, UPDATE_FREQ_PER_FRAME);
 
-CBUFFER(TAAOffsets, UPDATE_FREQ_PER_FRAME)
-{
-    float4 taa_prev_curr_offset;
-};
+// CBUFFER(TAAOffsets, UPDATE_FREQ_PER_FRAME)
+// {
+//     float4 taa_prev_curr_offset;
+// };
 
 // PUSH_CONSTANT(ShadingModeID, b0)
 // {
@@ -59,15 +59,6 @@ struct VSInput
 	float3 tangent: TANGENT;
 };
 
-// // 52bytes vertex layout
-
-// STRUCT(PackedVsInput)
-// {
-// 	DATA(float, packed[VERETX_LAYOUT_STRIDE], None);
-// };
-
-// RES(StructuredBuffer(PackedVsInput), vertex_buffers[], UPDATE_FREQ_BINDLESS);
-
 struct VSOutput
 {
 	float4 position: SV_Position;
@@ -95,6 +86,7 @@ VSOutput VS_MAIN( VSInput vsin, uint instance_id : SV_InstanceID, uint vertex_id
 {
     
     VSOutput vsout;
+    mesh_id  =SV_DrawID;
     // uint mesh_id;
     // mesh_id = draw_id;
     // mesh_id += mesh_id_offset;
@@ -120,7 +112,7 @@ VSOutput VS_MAIN( VSInput vsin, uint instance_id : SV_InstanceID, uint vertex_id
     return vsout;
 }
 
-PSOutput PS_MAIN(VSOutput vsout, uint tri_id : SV_PrimitiveID) 
+PSOutput PS_MAIN(VSOutput vsout, uint tri_id : SV_PrimitiveID, uint mesh_id : SV_InstanceID) 
 {
     PSOutput psout;
 

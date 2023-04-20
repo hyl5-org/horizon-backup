@@ -30,11 +30,11 @@ class VulkanCommandList : public CommandList {
     void BeginRenderPass(const RenderPassBeginInfo &begin_info) override;
     void EndRenderPass() override;
 
-    void DrawInstanced(u32 vertex_count, u32 first_vertex, u32 instance_count = 1,
-                               u32 first_instance = 0) override;
+    void DrawInstanced(u32 vertex_count, u32 first_vertex, u32 instance_count,
+                               u32 first_instance) override;
 
-    virtual void DrawIndexedInstanced(u32 index_count, u32 first_index, u32 first_vertex, u32 instance_count = 1,
-                                      u32 first_instance = 0) override;
+    virtual void DrawIndexedInstanced(u32 index_count, u32 first_index, u32 first_vertex, u32 instance_count,
+                                      u32 first_instance) override;
     void DrawIndirectInstanced(Buffer *buffer, u64 offset, u32 draw_count, u32 stride) override;
     void DrawIndirectIndexedInstanced(Buffer *buffer, u64 offset, u32 draw_count, u32 stride) override;
     // compute commands

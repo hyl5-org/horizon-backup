@@ -35,7 +35,7 @@ HorizonRuntime::~HorizonRuntime() noexcept {
 }
 
 void HorizonRuntime::BeginNewFrame() const {
-    auto rhi = m_render_system->GetRhi();
+    Backend::RHI* rhi = m_render_system->GetRhi();
     rhi->ResetRHIResources();
     rhi->ResetFence(CommandQueueType::GRAPHICS);
     rhi->ResetFence(CommandQueueType::COMPUTE);
@@ -45,7 +45,7 @@ void HorizonRuntime::BeginNewFrame() const {
 
 void HorizonRuntime::EndFrame() const {
     // TODO(hylu): wait for gpu execution?
-    auto rhi = m_render_system->GetRhi();
+    Backend::RHI *rhi = m_render_system->GetRhi();
     rhi->WaitGpuExecution(CommandQueueType::GRAPHICS);
     rhi->WaitGpuExecution(CommandQueueType::COMPUTE);
     rhi->WaitGpuExecution(CommandQueueType::TRANSFER);

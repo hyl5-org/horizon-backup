@@ -358,7 +358,7 @@ TextureFormat GetTextureFormatFromDXGIForamt(ddspp::DXGIFormat format) {
 
 TextureDataDesc TextureLoader::Load(const std::filesystem::path &path) {
     TextureDataDesc texture_info{};
-    auto extension = path.extension();
+    std::filesystem::path extension = path.extension();
     if (extension == ".png") {
         LoadPNG(path, texture_info);
     } else if (extension == ".jpg" || extension == ".jpeg") {

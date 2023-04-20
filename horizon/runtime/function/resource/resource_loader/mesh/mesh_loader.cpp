@@ -22,7 +22,7 @@ namespace Horizon {
 Mesh *MeshLoader::Load(const MeshDesc &desc, const std::filesystem::path &path) {
     Mesh *mesh = Memory::Alloc<Mesh>(desc);
 
-    auto extension = path.extension();
+    std::filesystem::path extension = path.extension();
     if (extension == ".gltf") {
         LoadGlTF2(path, *mesh);
     } else if (extension == ".fbx") {
